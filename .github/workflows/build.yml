@@ -119,15 +119,19 @@ jobs:
           tar xzf obs.tar.gz
           curl -fsSL -o deps.tar.xz https://github.com/obsproject/obs-deps/releases/download/2025-07-11/macos-deps-2025-07-11-arm64.tar.xz
           mkdir -p obs-deps && tar xf deps.tar.xz -C obs-deps
-          cmake -S obs-studio-${OBS_VERSION} -B obs-build -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
+          # OBS' own cmake refuses any generator but Xcode on macOS
+          # (cmake/macos/compilerconfig.cmake), so libobs is built with Xcode
+          # even though ProMatte itself builds with Ninja.
+          cmake -S obs-studio-${OBS_VERSION} -B obs-build -G Xcode \
             -DCMAKE_PREFIX_PATH="$PWD/obs-deps" \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -DOBS_CMAKE_VERSION=3.0.0 \
             -DENABLE_PLUGINS=OFF -DENABLE_FRONTEND=OFF -DENABLE_UI=OFF \
-            -DENABLE_SCRIPTING=OFF -DOBS_VERSION_OVERRIDE=${OBS_VERSION}
-          cmake --build obs-build --parallel --target libobs
-          cmake --install obs-build --component Development --prefix "$PWD/obs-sdk"
+            -DENABLE_SCRIPTING=OFF -DOBS_VERSION_OVERRIDE=${OBS_VERSION} \
+            -DCODESIGN_IDENTITY=- -DCODESIGN_TEAM=
+          cmake --build obs-build --config Release --parallel --target libobs
+          cmake --install obs-build --config Release --component Development --prefix "$PWD/obs-sdk"
       - name: Configure
         run: |
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
