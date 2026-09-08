@@ -259,6 +259,26 @@ in `build/bench-dump/`.
   A non-commercially licensed model (BRIA RMBG) was evaluated and **excluded**.
   Full list in [THIRD_PARTY_LICENSES.md](../THIRD_PARTY_LICENSES.md).
 
+## 8a. Platform coverage
+
+| Platform | Builds | Unit tests | Package | Loads in OBS | Run against a real camera |
+| -------- | ------ | ---------- | ------- | ------------ | ------------------------- |
+| Windows x64 (MSVC) | yes | 36/36 | `ProMatte-Setup-1.0.0.exe` | yes | yes, everything in this report |
+| Linux x86_64 (GCC 13, Ubuntu 24.04) | yes | 36/36 | `.deb` + `.tar.gz` | module `dlopen`s and resolves `obs_module_load`; all shared-library dependencies resolve | **no** |
+| macOS arm64 (Apple clang) | CI only | CI only | `.pkg` | **not checked** | **no** |
+
+Linux was built and tested in a WSL Ubuntu 24.04 container against the
+distribution's libobs 30.0.2 and an upstream ONNX Runtime 1.24.4 tarball. The
+`.deb` installs to `/usr/lib/obs-plugins/promatte.so` with ONNX Runtime beside it
+and `RUNPATH=$ORIGIN/promatte`; `ldd` reports no unresolved libraries and a
+`dlopen` test finds the module entry point. What has **not** happened on Linux is
+running it inside a real OBS against a camera, because the container has no GPU
+or display.
+
+macOS is built and packaged by the CI workflow on a `macos-14` runner and has
+never been executed by the author. Treat the macOS package as untested beyond
+"it compiles, links, packages and its unit tests pass".
+
 ## 8. Known limitations
 
 Verification gaps (things not tested rather than things known broken):
@@ -271,10 +291,12 @@ Verification gaps (things not tested rather than things known broken):
    corresponding ONNX Runtime execution provider is present, but the ONNX
    Runtime build installed here contains only DirectML and CPU, so they have
    never run. They are listed as unavailable in the UI on this machine.
-3. **Windows only.** macOS and Linux are not built or tested. The code avoids
-   Windows-only APIs outside `#ifdef _WIN32` blocks (`system_info`,
-   `model_downloader`, DirectML), but the CMake preset, the model download and
-   the installer are Windows-only today.
+3. **Only Windows is verified end to end.** Linux builds, passes its unit tests
+   and produces an installable package whose module loads, but has never been
+   run inside OBS. macOS is built and packaged by CI only. The platform matrix
+   is in §8a. DirectML is Windows-only by nature; CUDA, TensorRT, CoreML and
+   OpenVINO are selected automatically when an ONNX Runtime build providing them
+   is present, and none of them has run anywhere.
 4. **Long soaks.** 15 minutes live and 30 s headless were run. The 2-hour and
    8-hour soaks in the specification were not.
 5. **Camera scenarios.** The scenario list was exercised by one person in one
