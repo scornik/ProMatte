@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -77,8 +78,11 @@ public:
 private:
 	gs_texture_t *refineAlpha(const RenderParams &p);
 	gs_texture_t *estimateBackground(const RenderParams &p, gs_texture_t *alphaTex);
+	// libobs clears every effect parameter when an effect loop ends
+	// (gs_technique_end), so parameters must be set for each loop individually:
+	// `setParams` runs immediately before the loop that consumes them.
 	void drawEffect(gs_effect_t *fx, const char *technique, gs_texture_t *image, gs_texrender_t *target,
-			uint32_t w, uint32_t h);
+			uint32_t w, uint32_t h, const std::function<void()> &setParams = {});
 	void ensureStage(uint32_t w, uint32_t h);
 	void freeStage();
 

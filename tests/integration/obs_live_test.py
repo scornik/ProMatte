@@ -58,7 +58,7 @@ def connect(port, password, timeout=90):
     last = None
     while time.time() < end:
         try:
-            return obs.ReqClient(host="localhost", port=port, password=password, timeout=10)
+            return obs.ReqClient(host="localhost", port=port, password=password, timeout=30)
         except Exception as e:  # noqa: BLE001
             last = e
             time.sleep(2)
@@ -66,14 +66,28 @@ def connect(port, password, timeout=90):
 
 
 def wait_ready(c, port, password):
-    """OBS answers requests with code 207 until its UI has finished loading."""
+    """OBS answers with code 207 (and times out) until it has finished loading."""
     for _ in range(60):
         try:
-            return c, c.get_version()
+            ver = c.get_version()
+            # A trivial mutating request proves the UI thread is actually free.
+            c.get_scene_list()
+            return c, ver
         except Exception:  # noqa: BLE001
             time.sleep(2)
             c = connect(port, password)
     raise SystemExit("OBS never became ready")
+
+
+def retry(fn, attempts=5, delay=3):
+    last = None
+    for _ in range(attempts):
+        try:
+            return fn()
+        except Exception as e:  # noqa: BLE001
+            last = e
+            time.sleep(delay)
+    raise last
 
 
 def launch_obs(exe, port, password):
@@ -104,9 +118,9 @@ def find_camera(c):
 
 
 def ensure_scene(c, name):
-    names = [s["sceneName"] for s in c.get_scene_list().scenes]
+    names = [s["sceneName"] for s in retry(c.get_scene_list).scenes]
     if name not in names:
-        c.create_scene(name)
+        retry(lambda: c.create_scene(name))
         time.sleep(0.5)
 
 
@@ -194,8 +208,8 @@ def main():
     if not any("loading" in l for l in loaded):
         report["errors"].append("ProMatte module did not log its load message")
 
-    original_scene = c.get_current_program_scene().current_program_scene_name
-    cam, created_camera = setup_test_scene(c)
+    original_scene = retry(c.get_current_program_scene).current_program_scene_name
+    cam, created_camera = retry(lambda: setup_test_scene(c))
     c.set_current_program_scene(TEST_SCENE)
     time.sleep(2)
     log(f"camera '{cam}' in scene '{TEST_SCENE}' (was '{original_scene}')")

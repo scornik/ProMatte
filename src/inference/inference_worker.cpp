@@ -638,6 +638,20 @@ void InferenceWorker::processOne(FrameBuffer &frame)
 		}
 	}
 	const double postMs = sw.elapsedMs();
+
+	// Developer diagnostics: mean input luma and mean alpha make it obvious when
+	// the frame handed to the model is empty or the matte decoding is wrong.
+	// (OBS only writes LOG_DEBUG when started with --verbose, so this goes to INFO.)
+	if (log::minLevel() <= log::Level::Debug && (frame.seq % 30) == 0) {
+		double lumaSum = 0, alphaSum = 0;
+		for (size_t i = 0; i < n; ++i) {
+			lumaSum += luma_[i];
+			alphaSum += output_.alpha[i];
+		}
+		PM_LOG_INFO("frame %llu: %ux%u input luma %.1f, alpha mean %.3f (model %s)",
+			     static_cast<unsigned long long>(frame.seq), w, h, lumaSum / double(n),
+			     alphaSum / double(n), config_.model.id.c_str());
+	}
 	matteWork_.inferenceMs = infMs;
 	matteWork_.totalMs = total.elapsedMs();
 

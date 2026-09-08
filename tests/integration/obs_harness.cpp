@@ -12,12 +12,14 @@
 #include <chrono>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <string>
 #include <vector>
 #include <thread>
 
 #include <obs.h>
 #include <obs-module.h>
+#include <graphics/image-file.h>
 
 #include "utils/file_utils.h"
 #include "utils/system_info.h"
@@ -109,6 +111,10 @@ ObsRuntime *g_obs = nullptr;
 struct TestSource {
 	uint32_t w = 1280, h = 720;
 	float t = 0.f;
+	// A real portrait makes the segmentation model produce a real matte, which the
+	// matte-integrity test needs; without it the source is drawn procedurally.
+	gs_image_file_t image{};
+	bool imageLoaded = false;
 };
 
 void *testSourceCreate(obs_data_t *settings, obs_source_t *)
@@ -120,11 +126,25 @@ void *testSourceCreate(obs_data_t *settings, obs_source_t *)
 		s->w = 1280;
 		s->h = 720;
 	}
+	const std::string portrait = std::string(PROMATTE_SOURCE_DIR) + "/tests/visual/assets/portrait_obama.jpg";
+	if (fs::exists(portrait)) {
+		obs_enter_graphics();
+		gs_image_file_init(&s->image, portrait.c_str());
+		gs_image_file_init_texture(&s->image);
+		obs_leave_graphics();
+		s->imageLoaded = s->image.loaded;
+	}
 	return s;
 }
 void testSourceDestroy(void *d)
 {
-	delete static_cast<TestSource *>(d);
+	auto *s = static_cast<TestSource *>(d);
+	if (s->imageLoaded) {
+		obs_enter_graphics();
+		gs_image_file_free(&s->image);
+		obs_leave_graphics();
+	}
+	delete s;
 }
 void testSourceUpdate(void *d, obs_data_t *settings)
 {
@@ -150,6 +170,17 @@ uint32_t testSourceHeight(void *d)
 void testSourceRender(void *d, gs_effect_t *)
 {
 	auto *s = static_cast<TestSource *>(d);
+	if (s->imageLoaded && s->image.texture) {
+		gs_effect_t *def = obs_get_base_effect(OBS_EFFECT_DEFAULT);
+		gs_eparam_t *img = gs_effect_get_param_by_name(def, "image");
+		gs_effect_set_texture(img, s->image.texture);
+		gs_matrix_push();
+		gs_matrix_scale3f(float(s->w) / float(s->image.cx), float(s->h) / float(s->image.cy), 1.0f);
+		while (gs_effect_loop(def, "Draw"))
+			gs_draw_sprite(s->image.texture, 0, s->image.cx, s->image.cy);
+		gs_matrix_pop();
+		return;
+	}
 	gs_effect_t *solid = obs_get_base_effect(OBS_EFFECT_SOLID);
 	gs_eparam_t *color = gs_effect_get_param_by_name(solid, "color");
 	struct vec4 c;
@@ -369,6 +400,140 @@ double measureRenderMs(int settleFrames = 90, int samples = 40)
 	return v[v.size() / 5]; // 20th percentile
 }
 } // namespace
+
+namespace {
+// Renders one source (with its filters) into an off-screen target and reads the
+// pixels back, so tests can inspect what the filter actually produces.
+bool captureSource(obs_source_t *src, uint32_t w, uint32_t h, std::vector<uint8_t> &bgra)
+{
+	bool ok = false;
+	obs_enter_graphics();
+	gs_texrender_t *tr = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
+	gs_stagesurf_t *stage = gs_stagesurface_create(w, h, GS_RGBA);
+	if (tr && stage && gs_texrender_begin(tr, w, h)) {
+		struct vec4 clear;
+		vec4_zero(&clear);
+		gs_clear(GS_CLEAR_COLOR, &clear, 0.0f, 0);
+		gs_ortho(0.0f, float(w), 0.0f, float(h), -100.0f, 100.0f);
+		gs_blend_state_push();
+		gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
+		obs_source_video_render(src);
+		gs_blend_state_pop();
+		gs_texrender_end(tr);
+		gs_stage_texture(stage, gs_texrender_get_texture(tr));
+		uint8_t *data = nullptr;
+		uint32_t linesize = 0;
+		if (gs_stagesurface_map(stage, &data, &linesize)) {
+			bgra.resize(size_t(w) * h * 4);
+			for (uint32_t y = 0; y < h; ++y)
+				std::memcpy(bgra.data() + size_t(y) * w * 4, data + size_t(y) * linesize, size_t(w) * 4);
+			gs_stagesurface_unmap(stage);
+			ok = true;
+		}
+	}
+	if (stage)
+		gs_stagesurface_destroy(stage);
+	if (tr)
+		gs_texrender_destroy(tr);
+	obs_leave_graphics();
+	return ok;
+}
+
+std::vector<double> luma(const std::vector<uint8_t> &rgba)
+{
+	std::vector<double> out(rgba.size() / 4);
+	for (size_t i = 0; i < out.size(); ++i)
+		out[i] = 0.299 * rgba[i * 4] + 0.587 * rgba[i * 4 + 1] + 0.114 * rgba[i * 4 + 2];
+	return out;
+}
+
+double stddev(const std::vector<double> &v)
+{
+	if (v.empty())
+		return 0;
+	double m = 0;
+	for (double x : v)
+		m += x;
+	m /= double(v.size());
+	double s = 0;
+	for (double x : v)
+		s += (x - m) * (x - m);
+	return std::sqrt(s / double(v.size()));
+}
+
+double correlation(const std::vector<double> &a, const std::vector<double> &b)
+{
+	if (a.size() != b.size() || a.empty())
+		return 0;
+	double ma = 0, mb = 0;
+	for (size_t i = 0; i < a.size(); ++i) {
+		ma += a[i];
+		mb += b[i];
+	}
+	ma /= double(a.size());
+	mb /= double(b.size());
+	double num = 0, da = 0, db = 0;
+	for (size_t i = 0; i < a.size(); ++i) {
+		double x = a[i] - ma, y = b[i] - mb;
+		num += x * y;
+		da += x * x;
+		db += y * y;
+	}
+	if (da <= 1e-9 || db <= 1e-9)
+		return 0;
+	return num / std::sqrt(da * db);
+}
+} // namespace
+
+// Regression test for a real bug: libobs discards every effect parameter when an
+// effect loop ends, so a refinement pass that consumed the upsampler's parameters
+// left the joint bilateral upsample reading zeroed uniforms. The visible symptom
+// was a "matte" that tracked the source image instead of the model output.
+TEST_CASE("the refined matte follows the model matte, not the source image")
+{
+	const uint32_t w = 640, h = 360;
+	Scene s;
+	s.create(w, h, R"({"backend":"cpu","quality":"performance","bg_mode":"transparent","edge_feather":0.4})");
+	pump(120); // let the model load and produce a matte
+
+	std::vector<uint8_t> rawPix, refinedPix, srcPix;
+	obs_source_set_enabled(s.filter, false);
+	pump(20);
+	REQUIRE(captureSource(s.color, w, h, srcPix));
+	obs_source_set_enabled(s.filter, true);
+	pump(30);
+
+	// The filter passes video through until the model has loaded and produced its
+	// first matte; wait for the debug views to stop being the source image.
+	auto captureView = [&](const char *view, std::vector<uint8_t> &out) {
+		s.update((std::string(R"({"debug_view":")") + view + R"("})").c_str());
+		for (int attempt = 0; attempt < 25; ++attempt) {
+			pump(20);
+			REQUIRE(captureSource(s.color, w, h, out));
+			if (correlation(luma(out), luma(srcPix)) < 0.98)
+				return true;
+		}
+		return false;
+	};
+	REQUIRE_MESSAGE(captureView("raw_matte", rawPix), "the filter never produced a matte");
+	REQUIRE(captureView("matte", refinedPix));
+
+	const auto raw = luma(rawPix), refined = luma(refinedPix), source = luma(srcPix);
+	const double rawSd = stddev(raw), refinedSd = stddev(refined), srcSd = stddev(source);
+	const double corrRaw = correlation(refined, raw), corrSrc = correlation(refined, source);
+	std::printf("matte check: std raw %.1f refined %.1f source %.1f | corr(refined,raw) %.3f "
+		    "corr(refined,source) %.3f\n",
+		    rawSd, refinedSd, srcSd, corrRaw, corrSrc);
+	if (rawSd < 2.0) {
+		// The model found nothing in the synthetic frame: the refined matte must
+		// be just as flat. (With the bug it reproduced the source image instead.)
+		CHECK(refinedSd < 12.0);
+	} else {
+		CHECK(corrRaw > 0.75);
+		CHECK(corrRaw > corrSrc);
+	}
+	s.destroy();
+}
 
 TEST_CASE("render cost stays within budget at 720p and 1080p")
 {

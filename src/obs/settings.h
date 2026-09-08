@@ -12,7 +12,7 @@ namespace promatte {
 
 enum class BackgroundMode { Transparent = 0, Color, Image, Video, Blur, Dim, Source };
 enum class BackgroundFit { Cover = 0, Contain, Stretch };
-enum class DebugView { None = 0, Matte, Edges, Confidence, Foreground, Motion };
+enum class DebugView { None = 0, Matte, Edges, Confidence, Foreground, RawMatte };
 
 // Property keys (also used by presets and tests).
 namespace keys {

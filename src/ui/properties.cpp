@@ -363,6 +363,7 @@ obs_properties_t *buildProperties(void *data)
 	obs_property_list_add_string(dv, T("DebugView.Edges"), "edges");
 	obs_property_list_add_string(dv, T("DebugView.Confidence"), "confidence");
 	obs_property_list_add_string(dv, T("DebugView.Foreground"), "foreground");
+	obs_property_list_add_string(dv, T("DebugView.RawMatte"), "raw_matte");
 	obs_properties_add_bool(a, keys::Overlay, T("Overlay"));
 	obs_properties_add_int(a, keys::CpuThreads, T("CpuThreads"), 0, 32, 1);
 	obs_property_t *gpuList = obs_properties_add_list(a, keys::GpuIndex, T("GpuIndex"), OBS_COMBO_TYPE_LIST,

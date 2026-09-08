@@ -18,7 +18,7 @@ uniform float  dimOpacity;
 uniform float  decontaminate; // 0..1
 uniform float  haloRemoval;   // 0..1
 uniform float  hasForeground; // 1 when matteTex.rgb is a model foreground prediction
-uniform int    debugView;     // 0 none, 1 matte, 2 edges, 3 confidence, 4 foreground
+uniform int    debugView;     // 0 none, 1 matte, 2 edges, 3 confidence, 4 foreground, 5 raw matte
 
 sampler_state linearSampler {
 	Filter    = Linear;
@@ -92,6 +92,11 @@ float4 PSComposite(VertData v_in) : TARGET
 		return float4(heat(ab.g), 1.0);
 	if (debugView == 4)
 		return float4(fg * a, 1.0);
+	if (debugView == 5) {
+		// Raw model matte, upsampled bilinearly - bypasses every refinement pass.
+		float raw = matteTex.Sample(linearSampler, uv).a;
+		return float4(raw, raw, raw, 1.0);
+	}
 
 	// --- composition -----------------------------------------------------
 	float srcA = src.a;

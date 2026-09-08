@@ -66,8 +66,8 @@ const char *debugViewKey(DebugView v)
 		return "confidence";
 	case DebugView::Foreground:
 		return "foreground";
-	case DebugView::Motion:
-		return "motion";
+	case DebugView::RawMatte:
+		return "raw_matte";
 	}
 	return "none";
 }
@@ -84,8 +84,8 @@ DebugView debugViewFromKey(const char *k)
 		return DebugView::Confidence;
 	if (!std::strcmp(k, "foreground"))
 		return DebugView::Foreground;
-	if (!std::strcmp(k, "motion"))
-		return DebugView::Motion;
+	if (!std::strcmp(k, "raw_matte"))
+		return DebugView::RawMatte;
 	return DebugView::None;
 }
 

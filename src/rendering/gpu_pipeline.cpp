@@ -198,7 +198,7 @@ void GpuPipeline::freeStage()
 }
 
 void GpuPipeline::drawEffect(gs_effect_t *fx, const char *technique, gs_texture_t *image, gs_texrender_t *target,
-			     uint32_t w, uint32_t h)
+			     uint32_t w, uint32_t h, const std::function<void()> &setParams)
 {
 	gs_texrender_reset(target);
 	if (!gs_texrender_begin(target, w, h))
@@ -206,8 +206,11 @@ void GpuPipeline::drawEffect(gs_effect_t *fx, const char *technique, gs_texture_
 	gs_ortho(0.0f, float(w), 0.0f, float(h), -100.0f, 100.0f);
 	gs_blend_state_push();
 	gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
+	// Parameters must be assigned per loop: gs_technique_end() discards them all.
 	if (image)
 		setTex(fx, "image", image);
+	if (setParams)
+		setParams();
 	while (gs_effect_loop(fx, technique))
 		gs_draw_sprite(image, 0, w, h);
 	gs_blend_state_pop();
@@ -222,9 +225,10 @@ void GpuPipeline::stageFrame(uint32_t aiW, uint32_t aiH)
 	ensureStage(aiW, aiH);
 
 	// Downscale into the AI-resolution render target.
-	setVec2(downscaleFx_, "offset", (float(w_) / float(aiW)) * 0.25f / float(w_),
-		(float(h_) / float(aiH)) * 0.25f / float(h_));
-	drawEffect(downscaleFx_, "Draw", src, aiRender_, aiW, aiH);
+	drawEffect(downscaleFx_, "Draw", src, aiRender_, aiW, aiH, [&] {
+		setVec2(downscaleFx_, "offset", (float(w_) / float(aiW)) * 0.25f / float(w_),
+			(float(h_) / float(aiH)) * 0.25f / float(h_));
+	});
 	gs_texture_t *aiTex = gs_texrender_get_texture(aiRender_);
 	if (!aiTex)
 		return;
@@ -289,33 +293,38 @@ gs_texture_t *GpuPipeline::refineAlpha(const RenderParams &p)
 	gs_texture_t *guideLow = gs_texrender_get_texture(aiRender_);
 	if (!src || !matteTex_)
 		return nullptr;
-	setVec2(refineFx_, "lowTexel", 1.f / float(matteW_), 1.f / float(matteH_));
 	// Pack the AI-resolution colour and the matte into one texture so the
 	// upsampling loop needs a single fetch per neighbour (AI resolution: cheap).
 	gs_texture_t *lowGuide = matteTex_;
 	if (guideLow) {
-		setTex(refineFx_, "matte", matteTex_);
-		setTex(refineFx_, "guideLow", guideLow);
-		drawEffect(refineFx_, "Merge", guideLow, mergeRender_, matteW_, matteH_);
+		drawEffect(refineFx_, "Merge", guideLow, mergeRender_, matteW_, matteH_, [&] {
+			setTex(refineFx_, "matte", matteTex_);
+			setTex(refineFx_, "guideLow", guideLow);
+		});
 		if (gs_texture_t *merged = gs_texrender_get_texture(mergeRender_))
 			lowGuide = merged;
 	}
 	// Joint bilateral upsampling to full resolution.
-	setTex(refineFx_, "matte", lowGuide);
-	setVec2(refineFx_, "lowSize", float(matteW_), float(matteH_));
-	setFloat(refineFx_, "rangeSigma", p.rangeSigma);
-	drawEffect(refineFx_, p.upsampleQuality > 0 ? "Upsample5" : "Upsample3", src, alphaRender_, w_, h_);
+	drawEffect(refineFx_, p.upsampleQuality > 0 ? "Upsample5" : "Upsample3", src, alphaRender_, w_, h_, [&] {
+		setTex(refineFx_, "matte", lowGuide);
+		setVec2(refineFx_, "lowSize", float(matteW_), float(matteH_));
+		setVec2(refineFx_, "lowTexel", 1.f / float(matteW_), 1.f / float(matteH_));
+		setFloat(refineFx_, "rangeSigma", p.rangeSigma);
+	});
 	gs_texture_t *alpha = gs_texrender_get_texture(alphaRender_);
 	if (!alpha)
 		return nullptr;
 	if (p.featherPx >= 0.5f) {
-		setVec2(refineFx_, "texel", 1.f / float(w_), 1.f / float(h_));
-		setFloat(refineFx_, "radius", p.featherPx);
-		setVec2(refineFx_, "direction", 1.f, 0.f);
-		drawEffect(refineFx_, "Feather", alpha, featherRender_[0], w_, h_);
+		auto featherParams = [&](float dx, float dy) {
+			return [this, &p, dx, dy] {
+				setVec2(refineFx_, "texel", 1.f / float(w_), 1.f / float(h_));
+				setFloat(refineFx_, "radius", p.featherPx);
+				setVec2(refineFx_, "direction", dx, dy);
+			};
+		};
+		drawEffect(refineFx_, "Feather", alpha, featherRender_[0], w_, h_, featherParams(1.f, 0.f));
 		gs_texture_t *t0 = gs_texrender_get_texture(featherRender_[0]);
-		setVec2(refineFx_, "direction", 0.f, 1.f);
-		drawEffect(refineFx_, "Feather", t0, featherRender_[1], w_, h_);
+		drawEffect(refineFx_, "Feather", t0, featherRender_[1], w_, h_, featherParams(0.f, 1.f));
 		gs_texture_t *t1 = gs_texrender_get_texture(featherRender_[1]);
 		if (t1)
 			alpha = t1;
@@ -334,8 +343,8 @@ gs_texture_t *GpuPipeline::estimateBackground(const RenderParams &p, gs_texture_
 	// blur quality and 1/4 otherwise (4x less bandwidth on weak integrated GPUs).
 	const uint32_t div = (blurMode && p.blurQuality >= 2) ? 2u : 4u;
 	uint32_t hw = std::max<uint32_t>(w_ / div, 8), hh = std::max<uint32_t>(h_ / div, 8);
-	setTex(blurFx_, "alphaTex", alphaTex);
-	drawEffect(blurFx_, "Premultiply", src, premulRender_, hw, hh);
+	drawEffect(blurFx_, "Premultiply", src, premulRender_, hw, hh,
+		   [&] { setTex(blurFx_, "alphaTex", alphaTex); });
 	gs_texture_t *cur = gs_texrender_get_texture(premulRender_);
 	if (!cur)
 		return nullptr;
@@ -351,9 +360,10 @@ gs_texture_t *GpuPipeline::estimateBackground(const RenderParams &p, gs_texture_
 	uint32_t cw = hw, ch = hh;
 	for (int i = 0; i < levels; ++i) {
 		uint32_t nw = std::max<uint32_t>(cw / 2, 4), nh = std::max<uint32_t>(ch / 2, 4);
-		setVec2(blurFx_, "texel", 1.f / float(cw), 1.f / float(ch));
-		setFloat(blurFx_, "offset", offset);
-		drawEffect(blurFx_, "Down", cur, blurDown_[size_t(i)], nw, nh);
+		drawEffect(blurFx_, "Down", cur, blurDown_[size_t(i)], nw, nh, [&] {
+			setVec2(blurFx_, "texel", 1.f / float(cw), 1.f / float(ch));
+			setFloat(blurFx_, "offset", offset);
+		});
 		cur = gs_texrender_get_texture(blurDown_[size_t(i)]);
 		sizes.emplace_back(cw, ch);
 		cw = nw;
@@ -361,9 +371,10 @@ gs_texture_t *GpuPipeline::estimateBackground(const RenderParams &p, gs_texture_
 	}
 	for (int i = levels - 1; i >= 0; --i) {
 		auto [uw, uh] = sizes[size_t(i)];
-		setVec2(blurFx_, "texel", 1.f / float(cw), 1.f / float(ch));
-		setFloat(blurFx_, "offset", offset);
-		drawEffect(blurFx_, "Up", cur, blurUp_[size_t(i)], uw, uh);
+		drawEffect(blurFx_, "Up", cur, blurUp_[size_t(i)], uw, uh, [&] {
+			setVec2(blurFx_, "texel", 1.f / float(cw), 1.f / float(ch));
+			setFloat(blurFx_, "offset", offset);
+		});
 		cur = gs_texrender_get_texture(blurUp_[size_t(i)]);
 		cw = uw;
 		ch = uh;
@@ -449,7 +460,7 @@ void GpuPipeline::render(const RenderParams &p, gs_texture_t *background, uint32
 	setFloat(fx, "decontaminate", bgEst || matteHasFg_ ? p.decontaminate : 0.f);
 	setFloat(fx, "haloRemoval", bgEst ? p.haloRemoval : 0.f);
 	setFloat(fx, "hasForeground", matteHasFg_ ? 1.f : 0.f);
-	setInt(fx, "debugView", int(p.debugView) > 4 ? 0 : int(p.debugView));
+	setInt(fx, "debugView", int(p.debugView));
 
 	const bool srgb = gs_framebuffer_srgb_enabled();
 	gs_enable_framebuffer_srgb(false);
