@@ -374,7 +374,13 @@ bool OnnxRuntimeBackend::discoverIo(std::string &error)
 
 	// Log shapes for diagnostics.
 	for (size_t i = 0; i < nIn; ++i) {
-		auto info = session_->GetInputTypeInfo(i).GetTensorTypeAndShapeInfo();
+		// TypeInfo::GetTensorTypeAndShapeInfo() hands back a non-owning view, so
+		// the TypeInfo has to outlive it. Calling it on the temporary returned by
+		// GetInputTypeInfo() left the view dangling: harmless-looking on ONNX
+		// Runtime 1.24 but on 1.23 the garbage dimension count made GetShape()
+		// throw length_error and every model failed to load.
+		Ort::TypeInfo typeInfo = session_->GetInputTypeInfo(i);
+		auto info = typeInfo.GetTensorTypeAndShapeInfo();
 		auto shape = info.GetShape();
 		std::string s;
 		for (auto d : shape)
