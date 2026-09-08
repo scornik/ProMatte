@@ -142,7 +142,7 @@ first; [the CI workflow](.github/workflows/build.yml) does exactly this and is
 the reference for the steps. Then configure with `-DCMAKE_PREFIX_PATH` pointing
 at the resulting SDK and `-DPROMATTE_ORT_ROOT` at an
 `onnxruntime-osx-arm64-<version>` tarball, build, and run `cpack` to get the
-`.pkg`.
+`.zip` and `.tar.gz` of the bundle.
 
 ## Repository layout
 
