@@ -1,0 +1,5 @@
+# Development happens on Windows, where core.autocrlf rewrites checkouts. Scripts
+# that run on Linux and macOS must keep LF endings: a shell script checked out
+# with CRLF fails with "bad interpreter" the moment CI runs it.
+*.sh text eol=lf
+*.py text eol=lf

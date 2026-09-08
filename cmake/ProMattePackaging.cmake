@@ -30,6 +30,11 @@ set(CPACK_STRIP_FILES ON)
 set(CPACK_MONOLITHIC_INSTALL ON)
 
 if(APPLE)
+    # The bundle is sealed with an ad-hoc signature at the end of the build, and
+    # stripping a Mach-O invalidates that. install(DIRECTORY) does not strip, so
+    # this changes nothing today, but it keeps a later switch back to
+    # install(TARGETS) from quietly producing an unloadable bundle.
+    set(CPACK_STRIP_FILES OFF)
     # productbuild shows the licence in the installer and accepts only .rtfd,
     # .rtf, .html or .txt, so give it a copy with an extension it recognises.
     configure_file("${CMAKE_SOURCE_DIR}/LICENSE" "${CMAKE_BINARY_DIR}/LICENSE.txt" COPYONLY)

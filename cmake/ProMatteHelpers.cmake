@@ -111,33 +111,24 @@ function(promatte_install_plugin target)
                         "${CMAKE_SOURCE_DIR}/models/converted/${_m}" "${_res}/models/${_m}")
             endif()
         endforeach()
-        # Vendor libonnxruntime so the plugin does not depend on a Homebrew prefix.
+        # Vendor libonnxruntime so the plugin does not depend on a Homebrew prefix,
+        # rewrite the plugin's reference to point at the bundled copy, and seal the
+        # bundle. The filename on disk is not the name recorded in the plugin's load
+        # command - the upstream tarball ships libonnxruntime.dylib with an install
+        # name of @rpath/libonnxruntime.<version>.dylib - so the script reads the
+        # name out of the dylib and verifies the rewrite instead of deriving it here
+        # and hoping. Doing this in CMake needs the models and data to already be in
+        # place, which the commands above guarantee by being registered first.
         get_target_property(_ort promatte::onnxruntime IMPORTED_LOCATION)
         if(_ort)
-            # IMPORTED_LOCATION is the unversioned symlink, libonnxruntime.dylib,
-            # but the dylib's own install name - and therefore the LC_LOAD_DYLIB the
-            # linker records in the plugin - is the versioned
-            # @rpath/libonnxruntime.<version>.dylib. Vendoring under the symlink's
-            # name left the bundle without the file dyld actually asks for, and the
-            # -change below silently did nothing because its "from" string matched no
-            # load command. Copy the real file under its real name.
             get_filename_component(_ort_real "${_ort}" REALPATH)
-            get_filename_component(_ort_soname "${_ort_real}" NAME)
-            get_filename_component(_ort_link "${_ort}" NAME)
             add_custom_command(TARGET ${target} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_ort_real}" "${_fw}/${_ort_soname}"
-                COMMENT "Vendoring ${_ort_soname} into the bundle")
-            # Point the reference straight at the bundled copy so it resolves without
-            # depending on the rpath at all. Both spellings are rewritten because
-            # which one was recorded depends on how the tarball was laid out.
-            add_custom_command(TARGET ${target} POST_BUILD
-                COMMAND install_name_tool -change "@rpath/${_ort_soname}"
-                        "@loader_path/../Frameworks/${_ort_soname}" "$<TARGET_FILE:${target}>")
-            if(NOT _ort_link STREQUAL _ort_soname)
-                add_custom_command(TARGET ${target} POST_BUILD
-                    COMMAND install_name_tool -change "@rpath/${_ort_link}"
-                            "@loader_path/../Frameworks/${_ort_soname}" "$<TARGET_FILE:${target}>")
-            endif()
+                COMMAND bash "${CMAKE_SOURCE_DIR}/cmake/macos/finalise-bundle.sh"
+                        "${_ort_real}"
+                        "$<TARGET_BUNDLE_CONTENT_DIR:${target}>"
+                        "$<TARGET_FILE:${target}>"
+                COMMENT "Vendoring ONNX Runtime and sealing the ProMatte bundle"
+                VERBATIM)
         endif()
         # install(TARGETS) copies only the module binary out of the bundle, which
         # produced an 8 KB .pkg with no Resources and no Frameworks. Install the
