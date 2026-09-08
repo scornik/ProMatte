@@ -51,8 +51,10 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
+          # obs-studio itself is needed as well: the .deb declares a dependency on
+          # it, so the install check below cannot run without it present.
           sudo apt-get install -y build-essential cmake ninja-build pkg-config \
-            libobs-dev libcurl4-openssl-dev nlohmann-json3-dev file
+            libobs-dev obs-studio libcurl4-openssl-dev nlohmann-json3-dev file
       - name: Fetch ONNX Runtime
         run: |
           curl -fsSL -O https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-x64-${ORT_VERSION}.tgz
