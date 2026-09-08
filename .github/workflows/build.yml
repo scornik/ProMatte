@@ -167,26 +167,23 @@ jobs:
       - name: Unit tests
         run: DYLD_LIBRARY_PATH="$ORT_ROOT/lib" ./build/bin/promatte-unit-tests
       - name: Package
-        run: |
-          cd build
-          cpack -V || true
-          echo "--- what CPack actually staged ---"
-          staged="$(find _CPack_Packages -type d -name plugins | head -1)"
-          echo "staging root: $staged"
-          du -sh "$staged" || true
-          find "$staged" -maxdepth 3 | head -20
+        run: cd build && cpack
       - name: Show the bundle layout and check the package is not empty
         run: |
           find build/promatte.plugin -maxdepth 3 | head -30
           otool -L build/promatte.plugin/Contents/MacOS/promatte | head
-          # The bundle carries the models and ONNX Runtime, so a .pkg that comes
-          # out tiny means the install rules dropped its contents.
-          size=$(stat -f%z build/*.pkg)
-          echo "package size: $size bytes"
+          # The bundle carries the models and ONNX Runtime, so an archive that
+          # comes out tiny means the install rules dropped its contents.
+          size=$(stat -f%z build/ProMatte-*-macos-*.zip)
+          echo "archive size: $size bytes"
           if [ "$size" -lt 10000000 ]; then
-            echo "package is too small to contain the models and runtime"; exit 1
+            echo "archive is too small to contain the models and runtime"; exit 1
           fi
+          echo "--- archive contents ---"
+          unzip -l build/ProMatte-*-macos-*.zip | head -15
       - uses: actions/upload-artifact@v4
         with:
           name: promatte-macos-arm64
-          path: build/*.pkg
+          path: |
+            build/*.zip
+            build/*.tar.gz

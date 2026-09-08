@@ -34,9 +34,18 @@ if(APPLE)
     # .rtf, .html or .txt, so give it a copy with an extension it recognises.
     configure_file("${CMAKE_SOURCE_DIR}/LICENSE" "${CMAKE_BINARY_DIR}/LICENSE.txt" COPYONLY)
     set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_BINARY_DIR}/LICENSE.txt")
-    set(CPACK_GENERATOR "productbuild")
-    # OBS scans this directory for .plugin bundles on macOS.
-    set(CPACK_PACKAGING_INSTALL_PREFIX "/Library/Application Support/obs-studio/plugins")
+    # An archive of the .plugin bundle, which is how OBS plugins are normally
+    # distributed on macOS: the user drops it into
+    # ~/Library/Application Support/obs-studio/plugins.
+    #
+    # productbuild was tried first and staged the bundle correctly (66 MB), but
+    # emitted an 8 KB distribution wrapper with no payload attached, so it would
+    # have shipped an installer that installs nothing. ZIP and TGZ both carry the
+    # real bundle; TGZ is included because it preserves the executable bit
+    # everywhere.
+    set(CPACK_GENERATOR "ZIP;TGZ")
+    set(CPACK_PACKAGING_INSTALL_PREFIX "")
+    set(CPACK_ARCHIVE_COMPONENT_INSTALL OFF)
     set(CPACK_PACKAGE_FILE_NAME "ProMatte-${PROJECT_VERSION}-macos-${CMAKE_SYSTEM_PROCESSOR}")
 else()
     set(CPACK_GENERATOR "DEB;TGZ")
