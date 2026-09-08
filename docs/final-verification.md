@@ -49,9 +49,10 @@ worst case a user is likely to have.
 | Camera | USB 2.0 UVC webcam, 1920×1080 30 fps |
 | Backends detected by ProMatte | DirectML, CPU |
 
-Only one machine was available, so this report covers one hardware
-configuration. TensorRT, CUDA, OpenVINO, CoreML, macOS and Linux are **not**
-verified — see §8.
+Only one machine was available for measurement, so every number in this report
+comes from one hardware configuration. TensorRT, CUDA, OpenVINO and Linux are
+**not** verified — see §8. macOS is confirmed working on Apple Silicon by a
+second machine but has no measurements of its own; see §8a.
 
 ## 3. Automated test results
 
@@ -265,7 +266,7 @@ in `build/bench-dump/`.
 | -------- | ------ | ---------- | ------- | ------------ | ------------------------- |
 | Windows x64 (MSVC) | yes | 36/36 | `ProMatte-Setup-1.0.0.exe` | yes | yes, everything in this report |
 | Linux x86_64 (GCC 13, Ubuntu 24.04) | yes | 36/36 | `.deb` + `.tar.gz` | module `dlopen`s and resolves `obs_module_load`; all shared-library dependencies resolve | **no** |
-| macOS universal, Intel + Apple Silicon (Apple clang, macos-15) | yes, in CI | 36/36 in CI, arm64 slice | `.zip` + `.tar.gz` of `promatte.plugin` | every load command resolves against the bundle; 1.0.1 did **not** load, see below | **no** |
+| macOS universal, Intel + Apple Silicon (Apple clang, macos-15) | yes, in CI | 36/36 in CI, arm64 slice | `.zip` + `.tar.gz` of `promatte.plugin` | **yes** on Apple Silicon, OBS 32.2.2 (1.0.2; 1.0.1 did not, see below) | **yes** on Apple Silicon — background removal confirmed at 30/30 fps. Intel slice **not** run |
 
 Linux was built and tested in a WSL Ubuntu 24.04 container against the
 distribution's libobs 30.0.2 and an upstream ONNX Runtime 1.24.4 tarball. The
@@ -298,8 +299,19 @@ the run identifies the machine as "Ubuntu 24.04.4 LTS" through the new
 
 macOS is built, unit-tested and packaged by the CI workflow on a `macos-15`
 runner against a libobs 31.1.1 built from source there; the 36 unit tests pass
-on Apple Silicon. What has **not** happened is loading it in OBS on a Mac,
-because the author has none.
+on Apple Silicon.
+
+**1.0.2 has now been run in OBS on a Mac.** A user installed the released
+`ProMatte-1.0.2-macos-universal.zip` on an Apple Silicon machine running OBS
+32.2.2: the module loads, the filter appears and attaches to a Video Capture
+Device, and *Remove (transparent)* cuts the subject out with the scene showing
+through behind them. OBS reported 30.00/30.00 fps at 23.6 % CPU during the
+session. This is a functional confirmation from a screenshot, not an
+instrumented run — there are no benchmark numbers for macOS in §4, and the
+`x86_64` slice still has not been executed anywhere, since both the CI runner
+and the machine that confirmed this are Apple Silicon. Intel Macs remain
+structurally verified (`lipo` asserts the slice exists and every load command in
+it resolves) but unexercised.
 
 **1.0.1 did not load, and this section previously overstated what "packaged
 correctly" was worth.** A user ran the 1.0.1 bundle on an M1 and OBS 32.2.2
@@ -333,11 +345,13 @@ sealed with an ad-hoc `codesign` now, since rewriting load commands invalidates
 the signature the linker produced and arm64 code needs a valid one to load.
 
 So macOS for 1.0.2 is "compiles, links, passes its unit tests, packages
-correctly, and every dynamic-library reference in the shipped binary provably
-resolves". That is strictly more than 1.0.1 could claim and still less than
-having watched it load. In particular, a symbol-level mismatch between the libobs
-31.1.1 headers this is built against and the libobs inside OBS 32.x would not be
-caught by any of the above.
+correctly, every dynamic-library reference in the shipped binary provably
+resolves, and it loads and removes backgrounds in OBS 32.2.2 on Apple Silicon".
+The open question the structural checks could not have answered — whether the
+libobs 31.1.1 headers this is built against are compatible with the libobs
+inside OBS 32.x — is now answered in practice for arm64, since that is exactly
+the combination that was run. It remains unanswered for `x86_64`, and macOS has
+no performance measurements of its own.
 
 macOS is distributed as an archive rather than an installer package: CPack's
 productbuild generator staged the bundle correctly but emitted an 8 KB
@@ -364,12 +378,14 @@ Verification gaps (things not tested rather than things known broken):
    corresponding ONNX Runtime execution provider is present, but the ONNX
    Runtime build installed here contains only DirectML and CPU, so they have
    never run. They are listed as unavailable in the UI on this machine.
-3. **Only Windows is verified end to end.** Linux builds, passes its unit tests
+3. **Only Windows is measured end to end.** Linux builds, passes its unit tests
    and produces an installable package whose module loads, but has never been
-   run inside OBS. macOS is built and packaged by CI only. The platform matrix
-   is in §8a. DirectML is Windows-only by nature; CUDA, TensorRT, CoreML and
-   OpenVINO are selected automatically when an ONNX Runtime build providing them
-   is present, and none of them has run anywhere.
+   run inside OBS. macOS loads and removes backgrounds in OBS on Apple Silicon,
+   confirmed on a real machine, but has no benchmark numbers of its own and its
+   `x86_64` slice has never been executed. The platform matrix is in §8a.
+   DirectML is Windows-only by nature; CUDA, TensorRT, CoreML and OpenVINO are
+   selected automatically when an ONNX Runtime build providing them is present,
+   and none of them has been confirmed to run anywhere.
 4. **Long soaks.** 15 minutes live and 30 s headless were run. The 2-hour and
    8-hour soaks in the specification were not.
 5. **Camera scenarios.** The scenario list was exercised by one person in one

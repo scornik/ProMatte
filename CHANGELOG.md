@@ -30,6 +30,15 @@ archive, and both slices must be universal. The checks it replaces — `otool -L
 piped to `head` and an archive size test — passed cleanly on the broken 1.0.1
 build; this script fails it with six errors.
 
+**Confirmed working on Apple Silicon.** The released bundle was installed on an
+M-series Mac running OBS 32.2.2: the module loads, the filter attaches to a
+camera and *Remove (transparent)* cuts the subject out, with OBS holding
+30.00/30.00 fps at 23.6 % CPU. This is the first time ProMatte has been run
+inside OBS on a Mac, and it also settles the question the structural checks could
+not answer — whether libobs 31.1.1 headers are compatible with the libobs inside
+OBS 32.x — for arm64. Intel Macs remain built and structurally verified but never
+executed, since both the CI runner and the confirming machine are Apple Silicon.
+
 Windows and Linux are unaffected; nothing in their build changed.
 
 ## 1.0.1 — 2026-09-08

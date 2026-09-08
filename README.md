@@ -120,7 +120,7 @@ library if it did not.
 | -------- | ------- | ---------------- | ----- |
 | Windows x64 | `ProMatte-Setup-<version>.exe` | DirectML on any D3D12 GPU (NVIDIA / AMD / Intel); CUDA and TensorRT when an ONNX Runtime build providing them is installed | released and verified on real hardware, see [docs/final-verification.md](docs/final-verification.md) |
 | Linux x86_64 | `.deb` and `.tar.gz` | CPU; CUDA when an ONNX Runtime build providing it is installed | builds, unit tests pass, package installs and the module loads; not yet exercised against a running OBS |
-|  macOS (Intel + Apple Silicon) | `.zip` / `.tar.gz` of `promatte.plugin` | CPU; CoreML when an ONNX Runtime build providing it is installed | 1.0.1 failed to load in OBS on a real Mac; 1.0.2 fixes the two linkage faults that caused it, and CI now proves every load command resolves against the bundle. Still not run inside OBS by the author — see [docs/final-verification.md](docs/final-verification.md) |
+|  macOS (Intel + Apple Silicon) | `.zip` / `.tar.gz` of `promatte.plugin` | CPU; CoreML when an ONNX Runtime build providing it is installed | **confirmed working**: loads and removes the background in OBS 32.2.2 on an Apple Silicon Mac, 30/30 fps. 1.0.1 failed to load; 1.0.2 fixes it. The `x86_64` slice is built and structurally verified but has not been run on an Intel Mac — see [docs/final-verification.md](docs/final-verification.md) |
 
 Packages for Linux and macOS are produced by
 [the build workflow](.github/workflows/build.yml) and attached to each run as
