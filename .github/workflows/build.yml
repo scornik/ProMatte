@@ -139,7 +139,11 @@ jobs:
           # The Development component installs obs-frontend-api too, so build it as
           # well even though ProMatte does not use it; tools/setup-deps.ps1 builds
           # the same pair on Windows.
-          cmake --build obs-build --config Release --parallel --target libobs obs-frontend-api
+          # Separate invocations: the Xcode generator did not honour two --target
+          # arguments in one call, so obs-frontend-api silently went unbuilt and
+          # only surfaced when the Development component tried to install it.
+          cmake --build obs-build --config Release --parallel --target libobs
+          cmake --build obs-build --config Release --parallel --target obs-frontend-api
           cmake --install obs-build --config Release --component Development --prefix "$PWD/obs-sdk"
       - name: Configure
         run: |
