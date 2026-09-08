@@ -41,7 +41,7 @@ See [docs/troubleshooting.md](docs/troubleshooting.md) if something looks wrong.
 | -------- | ------- | ---------------- | ----- |
 | Windows x64 | `ProMatte-Setup-<version>.exe` | DirectML on any D3D12 GPU (NVIDIA / AMD / Intel); CUDA and TensorRT when an ONNX Runtime build providing them is installed | released and verified on real hardware, see [docs/final-verification.md](docs/final-verification.md) |
 | Linux x86_64 | `.deb` and `.tar.gz` | CPU; CUDA when an ONNX Runtime build providing it is installed | builds, unit tests pass, package installs and the module loads; not yet exercised against a running OBS |
-| macOS arm64 | `.pkg` | CPU; CoreML when an ONNX Runtime build providing it is installed | built and packaged by CI only; never run by the author, see the limitations in [docs/final-verification.md](docs/final-verification.md) |
+| macOS arm64 | `.zip` / `.tar.gz` of `promatte.plugin` | CPU; CoreML when an ONNX Runtime build providing it is installed | built, unit-tested and packaged by CI; never run inside OBS by the author, see the limitations in [docs/final-verification.md](docs/final-verification.md) |
 
 Packages for Linux and macOS are produced by
 [the build workflow](.github/workflows/build.yml) and attached to each run as
@@ -66,9 +66,21 @@ because no distribution packages it, and the module's `RUNPATH` points there.
 
 ### Installing on macOS
 
-Open the `.pkg`. It installs `promatte.plugin` into
-`/Library/Application Support/obs-studio/plugins`. The bundle is unsigned, so
-Gatekeeper will ask you to allow it in System Settings the first time.
+Unpack the archive and move the bundle into your plugins directory:
+
+```bash
+unzip ProMatte-1.0.0-macos-arm64.zip
+mkdir -p ~/Library/Application\ Support/obs-studio/plugins
+mv promatte.plugin ~/Library/Application\ Support/obs-studio/plugins/
+```
+
+The bundle carries its own ONNX Runtime in `Contents/Frameworks`, so there is
+nothing else to install. It is unsigned and unnotarised, so Gatekeeper will
+quarantine it; clear that with:
+
+```bash
+xattr -dr com.apple.quarantine ~/Library/Application\ Support/obs-studio/plugins/promatte.plugin
+```
 
 ## Building from source
 

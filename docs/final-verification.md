@@ -265,7 +265,7 @@ in `build/bench-dump/`.
 | -------- | ------ | ---------- | ------- | ------------ | ------------------------- |
 | Windows x64 (MSVC) | yes | 36/36 | `ProMatte-Setup-1.0.0.exe` | yes | yes, everything in this report |
 | Linux x86_64 (GCC 13, Ubuntu 24.04) | yes | 36/36 | `.deb` + `.tar.gz` | module `dlopen`s and resolves `obs_module_load`; all shared-library dependencies resolve | **no** |
-| macOS arm64 (Apple clang) | CI only | CI only | `.pkg` | **not checked** | **no** |
+| macOS arm64 (Apple clang, macos-15) | yes, in CI | 36/36 in CI | `.zip` + `.tar.gz` of `promatte.plugin` | **not checked** | **no** |
 
 Linux was built and tested in a WSL Ubuntu 24.04 container against the
 distribution's libobs 30.0.2 and an upstream ONNX Runtime 1.24.4 tarball. The
@@ -296,9 +296,19 @@ that nothing in the port changed the numerics. The platform reporting works too:
 the run identifies the machine as "Ubuntu 24.04.4 LTS" through the new
 `/etc/os-release` path rather than the old "Unknown OS".
 
-macOS is built and packaged by the CI workflow on a `macos-14` runner and has
-never been executed by the author. Treat the macOS package as untested beyond
-"it compiles, links, packages and its unit tests pass".
+macOS is built, unit-tested and packaged by the CI workflow on a `macos-15`
+runner against a libobs 31.1.1 built from source there; the 36 unit tests pass
+on Apple Silicon. The archive was downloaded and inspected: `promatte.plugin`
+contains `Contents/MacOS/promatte`, `Contents/Info.plist`, all five bundled
+models under `Contents/Resources/models`, the effects and locale, and a vendored
+`libonnxruntime.dylib` in `Contents/Frameworks`. What has **not** happened is
+loading it in OBS on a Mac, because the author has none. Treat macOS as
+"compiles, links, passes its unit tests and packages correctly", nothing more.
+
+macOS is distributed as an archive rather than an installer package: CPack's
+productbuild generator staged the bundle correctly but emitted an 8 KB
+distribution wrapper with no payload, which would have been an installer that
+installs nothing.
 
 ## 8. Known limitations
 
