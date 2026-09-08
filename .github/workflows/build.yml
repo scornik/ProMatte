@@ -167,7 +167,11 @@ jobs:
       - name: Unit tests
         run: DYLD_LIBRARY_PATH="$ORT_ROOT/lib" ./build/bin/promatte-unit-tests
       - name: Package
-        run: cd build && cpack
+        run: |
+          cd build
+          cpack -V || true
+          echo "--- what CPack actually staged ---"
+          find _CPack_Packages -maxdepth 7 -not -path "*/Contents/Packages/*" | head -40
       - name: Show the bundle layout and check the package is not empty
         run: |
           find build/promatte.plugin -maxdepth 3 | head -30
