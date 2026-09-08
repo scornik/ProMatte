@@ -173,10 +173,19 @@ jobs:
         run: DYLD_LIBRARY_PATH="$ORT_ROOT/lib" ./build/bin/promatte-unit-tests
       - name: Package
         run: cd build && cpack
+      - name: Verify the bundle would load in OBS
+        # 1.0.1 passed the checks that used to live here - otool output piped to
+        # head, plus an archive size test - and still failed to load on a real
+        # Mac: the module had no @executable_path rpath to find libobs inside
+        # OBS.app, and the vendored ONNX Runtime was written under the name of the
+        # unversioned symlink rather than the versioned name dyld asks for. This
+        # resolves every load command against the bundle instead of printing them.
+        run: python3 tools/check-macos-bundle.py build/promatte.plugin
       - name: Show the bundle layout and check the package is not empty
         run: |
           find build/promatte.plugin -maxdepth 3 | head -30
-          otool -L build/promatte.plugin/Contents/MacOS/promatte | head
+          otool -L build/promatte.plugin/Contents/MacOS/promatte
+          otool -l build/promatte.plugin/Contents/MacOS/promatte | grep -A2 LC_RPATH
           echo "--- architectures ---"
           # Both slices must be present or the plugin will not load on Intel Macs.
           for f in build/promatte.plugin/Contents/MacOS/promatte \
@@ -197,6 +206,13 @@ jobs:
           fi
           echo "--- archive contents ---"
           unzip -l build/ProMatte-*-macos-*.zip | head -15
+      - name: Verify the packaged bundle, not only the built one
+        # The archive is what users unpack, so re-run the check on its contents:
+        # an install rule that dropped or renamed a file would not show up above.
+        run: |
+          mkdir -p /tmp/pkgcheck
+          unzip -q build/ProMatte-*-macos-*.zip -d /tmp/pkgcheck
+          python3 tools/check-macos-bundle.py /tmp/pkgcheck/*/promatte.plugin
       - uses: actions/upload-artifact@v4
         with:
           name: promatte-macos-universal

@@ -18,15 +18,91 @@ replacement filter for OBS Studio. Add it to your webcam and choose *Remove*,
 **Downloads:** [latest release](https://github.com/scornik/ProMatte/releases/latest)
 — Windows installer, Linux `.deb`/`.tar.gz`, macOS bundle archive.
 
-## Quick start (users)
+## Quick start
 
-1. Run `ProMatte-Setup.exe` (Windows 10/11 64-bit, OBS 30.0 or newer).
-2. Start OBS, right-click your webcam source → **Filters** → **+** → **ProMatte AI Background Removal**.
-3. Leave *Background* on **Remove (transparent)** (or pick Blur / Replace) and *Quality* on **Auto**. Done.
-4. Optional: in the *Model manager* section download **Robust Video Matting**
+Install the package for your platform (below), then on every platform:
+
+1. Start OBS and right-click your camera source → **Filters** → **+** →
+   **ProMatte AI Background Removal**.
+2. Leave *Background* on **Remove (transparent)** — or pick Blur / Replace / Dim
+   — and *Quality* on **Auto**. Done.
+3. Optional: in the *Model manager* section download **Robust Video Matting**
    for the best hair detail on GPUs (15 MB, one-time download).
 
+Note that the presets tune matte quality and cost only. None of them crops or
+zooms — "Tutorial / Talking head" does not frame your head for you. Use OBS'
+own **Crop/Pad** filter or the source transform for that.
+
 See [docs/troubleshooting.md](docs/troubleshooting.md) if something looks wrong.
+
+### Windows
+
+Run `ProMatte-Setup-1.0.2.exe`. Windows 10/11 64-bit, OBS 30.0 or newer. The
+installer finds your OBS directory and removes any older copy for you.
+
+### Linux
+
+On Debian, Ubuntu and derivatives:
+
+```bash
+sudo dpkg -i promatte_1.0.2_amd64.deb
+sudo apt-get install -f      # only if dpkg reported missing dependencies
+```
+
+On any other distribution the tarball carries the same `usr/` tree:
+
+```bash
+sudo tar xzf promatte_1.0.2_linux-x86_64.tar.gz --strip-components=1 -C /
+```
+
+Either way `promatte.so` lands in `/usr/lib/obs-plugins` and its data in
+`/usr/share/obs/obs-plugins/promatte`, which is where a distribution OBS looks.
+ONNX Runtime is shipped beside the module in `/usr/lib/obs-plugins/promatte/`
+because no distribution packages it, and the module's `RUNPATH` points there.
+
+Check that it resolved before starting OBS:
+
+```bash
+ldd /usr/lib/obs-plugins/promatte.so | grep "not found"     # no output is good
+```
+
+This will not work with a Flatpak or Snap OBS: those run in a sandbox with their
+own plugin directory and their own libraries. Install OBS from your distribution
+or from the official PPA instead.
+
+### macOS — Apple Silicon (M1/M2/M3/M4) and Intel
+
+One download covers both; the bundle is a universal binary.
+
+```bash
+# 1. unpack (the archive contains a versioned folder)
+unzip ProMatte-1.0.2-macos-universal.zip
+
+# 2. install for the current user
+mkdir -p ~/Library/Application\ Support/obs-studio/plugins
+mv ProMatte-1.0.2-macos-universal/promatte.plugin \
+   ~/Library/Application\ Support/obs-studio/plugins/
+
+# 3. the bundle is unsigned, so clear the quarantine flag Gatekeeper sets
+xattr -dr com.apple.quarantine \
+   ~/Library/Application\ Support/obs-studio/plugins/promatte.plugin
+```
+
+Then quit OBS completely — ⌘Q, not just closing the window — and start it again.
+The bundle carries its own ONNX Runtime in `Contents/Frameworks`, so there is
+nothing else to install.
+
+**Do not use the 1.0.2 macOS build's predecessor.** 1.0.1 makes OBS report *"the
+following OBS plugins failed to load: promatte"*: its binary had no rpath that
+could reach `libobs` inside OBS.app, and the ONNX Runtime inside the bundle was
+saved under the wrong filename. Both are fixed in 1.0.2. If you installed 1.0.1,
+delete `~/Library/Application Support/obs-studio/plugins/promatte.plugin` before
+installing the new one.
+
+If the filter does not appear in the list, open **Help → Log Files → View
+Current Log** and search for `promatte`: the module logs its version and the
+backends it found as soon as OBS loads it, and dyld prints the exact unresolved
+library if it did not.
 
 ## Requirements
 
@@ -44,51 +120,11 @@ See [docs/troubleshooting.md](docs/troubleshooting.md) if something looks wrong.
 | -------- | ------- | ---------------- | ----- |
 | Windows x64 | `ProMatte-Setup-<version>.exe` | DirectML on any D3D12 GPU (NVIDIA / AMD / Intel); CUDA and TensorRT when an ONNX Runtime build providing them is installed | released and verified on real hardware, see [docs/final-verification.md](docs/final-verification.md) |
 | Linux x86_64 | `.deb` and `.tar.gz` | CPU; CUDA when an ONNX Runtime build providing it is installed | builds, unit tests pass, package installs and the module loads; not yet exercised against a running OBS |
-|  macOS (Intel + Apple Silicon) | `.zip` / `.tar.gz` of `promatte.plugin` | CPU; CoreML when an ONNX Runtime build providing it is installed | built, unit-tested and packaged by CI; never run inside OBS by the author, see the limitations in [docs/final-verification.md](docs/final-verification.md) |
+|  macOS (Intel + Apple Silicon) | `.zip` / `.tar.gz` of `promatte.plugin` | CPU; CoreML when an ONNX Runtime build providing it is installed | 1.0.1 failed to load in OBS on a real Mac; 1.0.2 fixes the two linkage faults that caused it, and CI now proves every load command resolves against the bundle. Still not run inside OBS by the author — see [docs/final-verification.md](docs/final-verification.md) |
 
 Packages for Linux and macOS are produced by
 [the build workflow](.github/workflows/build.yml) and attached to each run as
 artifacts.
-
-### Installing on Linux
-
-```bash
-sudo dpkg -i promatte_1.0.1_amd64.deb
-```
-
-Or, on a distribution without dpkg, the tarball holds the same `usr/` tree:
-
-```bash
-sudo tar xzf promatte_1.0.1_linux-x86_64.tar.gz --strip-components=1 -C /
-```
-
-Either way `promatte.so` lands in `/usr/lib/obs-plugins` and its data in
-`/usr/share/obs/obs-plugins/promatte`, which is where a distribution OBS looks.
-ONNX Runtime is shipped beside the module in `/usr/lib/obs-plugins/promatte/`
-because no distribution packages it, and the module's `RUNPATH` points there.
-
-### Installing on macOS
-
-Works on both Intel and Apple Silicon; the bundle is a universal binary.
-
-```bash
-# 1. unpack (the archive contains a versioned folder)
-unzip ProMatte-1.0.1-macos-universal.zip
-
-# 2. install for the current user
-mkdir -p ~/Library/Application\ Support/obs-studio/plugins
-mv ProMatte-1.0.1-macos-universal/promatte.plugin "$HOME/Library/Application Support/obs-studio/plugins/"
-
-# 3. the bundle is unsigned, so clear the quarantine flag Gatekeeper sets
-xattr -dr com.apple.quarantine "$HOME/Library/Application Support/obs-studio/plugins/promatte.plugin"
-```
-
-Restart OBS, then add the filter to your camera. The bundle carries its own ONNX
-Runtime in `Contents/Frameworks`, so there is nothing else to install.
-
-If the filter does not appear, open **Help → Log Files → View Current Log** and
-search for `promatte`: the module logs its version and the backends it found as
-soon as OBS loads it.
 
 ## Building from source
 

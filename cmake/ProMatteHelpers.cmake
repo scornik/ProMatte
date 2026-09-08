@@ -90,7 +90,14 @@ function(promatte_install_plugin target)
             MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
             MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/cmake/macos/Info.plist.in"
             BUILD_WITH_INSTALL_RPATH TRUE
-            INSTALL_RPATH "@loader_path/../Frameworks")
+            # @executable_path is OBS.app/Contents/MacOS, so this reaches
+            # OBS.app/Contents/Frameworks where libobs.framework lives. Without it
+            # the plugin's own @rpath/libobs.framework/... reference cannot resolve
+            # once the bundle sits in ~/Library/Application Support/obs-studio/plugins
+            # and OBS reports "failed to load". @loader_path/../Frameworks is for the
+            # ONNX Runtime vendored inside this bundle. This is the same pair the
+            # upstream obs-plugintemplate sets.
+            INSTALL_RPATH "@executable_path/../Frameworks;@loader_path/../Frameworks")
         set(_res "$<TARGET_BUNDLE_CONTENT_DIR:${target}>/Resources")
         set(_fw "$<TARGET_BUNDLE_CONTENT_DIR:${target}>/Frameworks")
         add_custom_command(TARGET ${target} POST_BUILD
@@ -107,12 +114,30 @@ function(promatte_install_plugin target)
         # Vendor libonnxruntime so the plugin does not depend on a Homebrew prefix.
         get_target_property(_ort promatte::onnxruntime IMPORTED_LOCATION)
         if(_ort)
-            get_filename_component(_ort_name "${_ort}" NAME)
+            # IMPORTED_LOCATION is the unversioned symlink, libonnxruntime.dylib,
+            # but the dylib's own install name - and therefore the LC_LOAD_DYLIB the
+            # linker records in the plugin - is the versioned
+            # @rpath/libonnxruntime.<version>.dylib. Vendoring under the symlink's
+            # name left the bundle without the file dyld actually asks for, and the
+            # -change below silently did nothing because its "from" string matched no
+            # load command. Copy the real file under its real name.
+            get_filename_component(_ort_real "${_ort}" REALPATH)
+            get_filename_component(_ort_soname "${_ort_real}" NAME)
+            get_filename_component(_ort_link "${_ort}" NAME)
             add_custom_command(TARGET ${target} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_ort}" "${_fw}/${_ort_name}"
-                COMMAND install_name_tool -change "@rpath/${_ort_name}"
-                        "@loader_path/../Frameworks/${_ort_name}" "$<TARGET_FILE:${target}>"
-                COMMENT "Vendoring ${_ort_name} into the bundle")
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_ort_real}" "${_fw}/${_ort_soname}"
+                COMMENT "Vendoring ${_ort_soname} into the bundle")
+            # Point the reference straight at the bundled copy so it resolves without
+            # depending on the rpath at all. Both spellings are rewritten because
+            # which one was recorded depends on how the tarball was laid out.
+            add_custom_command(TARGET ${target} POST_BUILD
+                COMMAND install_name_tool -change "@rpath/${_ort_soname}"
+                        "@loader_path/../Frameworks/${_ort_soname}" "$<TARGET_FILE:${target}>")
+            if(NOT _ort_link STREQUAL _ort_soname)
+                add_custom_command(TARGET ${target} POST_BUILD
+                    COMMAND install_name_tool -change "@rpath/${_ort_link}"
+                            "@loader_path/../Frameworks/${_ort_soname}" "$<TARGET_FILE:${target}>")
+            endif()
         endif()
         # install(TARGETS) copies only the module binary out of the bundle, which
         # produced an 8 KB .pkg with no Resources and no Frameworks. Install the

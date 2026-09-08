@@ -1,5 +1,37 @@
 # Changelog
 
+## 1.0.2 — 2026-09-08
+
+**The macOS plugin now links correctly.** 1.0.1 made OBS report *"the following
+OBS plugins failed to load: promatte"* on every Mac. Two independent faults were
+baked into the shipped binary, either of which was enough on its own:
+
+* The module's only `LC_RPATH` was `@loader_path/../Frameworks`, which points
+  inside ProMatte's own bundle. Its dependency on
+  `@rpath/libobs.framework/Versions/A/libobs` therefore had nowhere to resolve,
+  because libobs lives in `OBS.app/Contents/Frameworks` and the plugin sits
+  outside the app. The bundle now also carries `@executable_path/../Frameworks`,
+  the same pair the upstream OBS plugin template sets.
+* The vendored ONNX Runtime was copied into the bundle under the name of the
+  unversioned symlink, `libonnxruntime.dylib`, while the dependency recorded in
+  the module was the versioned `@rpath/libonnxruntime.1.23.0.dylib`. The file
+  dyld asked for was not in the bundle at all. The `install_name_tool -change`
+  that was meant to paper over this used the same wrong name, so it matched no
+  load command and did nothing without failing. The real file is now vendored
+  under its real name and the reference points straight at it.
+
+**CI now proves the bundle is loadable instead of eyeballing it.**
+`tools/check-macos-bundle.py` parses the Mach-O load commands and resolves every
+one of them against the bundle: system libraries are accepted, `@loader_path`
+dependencies must exist on disk, `@rpath` dependencies must be reachable through
+an rpath that is actually present, and anything OBS.app supplies requires an
+`@executable_path` rpath. It runs against both the built bundle and the unpacked
+archive, and both slices must be universal. The checks it replaces — `otool -L`
+piped to `head` and an archive size test — passed cleanly on the broken 1.0.1
+build; this script fails it with six errors.
+
+Windows and Linux are unaffected; nothing in their build changed.
+
 ## 1.0.1 — 2026-09-08
 
 macOS now ships as a universal binary, so ProMatte runs on Intel Macs as well as
