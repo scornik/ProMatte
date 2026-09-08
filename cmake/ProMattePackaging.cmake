@@ -30,6 +30,10 @@ set(CPACK_STRIP_FILES ON)
 set(CPACK_MONOLITHIC_INSTALL ON)
 
 if(APPLE)
+    # productbuild shows the licence in the installer and accepts only .rtfd,
+    # .rtf, .html or .txt, so give it a copy with an extension it recognises.
+    configure_file("${CMAKE_SOURCE_DIR}/LICENSE" "${CMAKE_BINARY_DIR}/LICENSE.txt" COPYONLY)
+    set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_BINARY_DIR}/LICENSE.txt")
     set(CPACK_GENERATOR "productbuild")
     # OBS scans this directory for .plugin bundles on macOS.
     set(CPACK_PACKAGING_INSTALL_PREFIX "/Library/Application Support/obs-studio/plugins")
