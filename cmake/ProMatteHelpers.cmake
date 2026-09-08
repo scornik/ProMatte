@@ -114,7 +114,10 @@ function(promatte_install_plugin target)
                         "@loader_path/../Frameworks/${_ort_name}" "$<TARGET_FILE:${target}>"
                 COMMENT "Vendoring ${_ort_name} into the bundle")
         endif()
-        install(TARGETS ${target} BUNDLE DESTINATION "." COMPONENT plugin)
+        # A MODULE library keeps its LIBRARY classification even with BUNDLE set,
+        # so BUNDLE DESTINATION is rejected; LIBRARY DESTINATION installs the
+        # whole promatte.plugin directory.
+        install(TARGETS ${target} LIBRARY DESTINATION "." COMPONENT plugin)
     else()
         install(TARGETS ${target} LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/obs-plugins" COMPONENT plugin)
         install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/"

@@ -25,8 +25,8 @@ set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/scornik/ProMatte")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
 set(CPACK_PACKAGE_CONTACT "ProMatte maintainers")
 set(CPACK_STRIP_FILES ON)
-set(CPACK_COMPONENTS_ALL plugin)
-set(CPACK_DEB_COMPONENT_INSTALL OFF)
+# One package containing everything; naming a component list as well makes CPack
+# warn that the two settings conflict.
 set(CPACK_MONOLITHIC_INSTALL ON)
 
 if(APPLE)
