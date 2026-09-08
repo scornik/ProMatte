@@ -29,8 +29,8 @@ Artefacts:
 
 | File | Size | SHA-256 |
 | ---- | ---- | ------- |
-| `installer/output/ProMatte-Setup-1.0.0.exe` | 43.2 MB | `33b5c40b915c37912ab1ba3b0fd343f5a1b2cd97db95bf4e8d815db79f60e758` |
-| `build/stage/obs-plugins/64bit/promatte.dll` | 434 KB | `87a554ab82fc6bba059e3011d444e9245ca1ad74f4857598b3bf8308eb8404e4` (staged with `promatte.pdb`) |
+| `installer/output/ProMatte-Setup-1.0.0.exe` | 43.2 MB | `dd1625789032be08e07872a46498448dcc58bd6d48b916572b609a8a9de97385` |
+| `build/stage/obs-plugins/64bit/promatte.dll` | 434 KB | `d9400d96d717738d7ede483a5ff89ec32bb3ec6a3e990f63023dae245633e06d` (staged with `promatte.pdb`) |
 
 The installer carries the plugin, ONNX Runtime, DirectML, the four effects, the
 locale file, the model manifest and the five bundled models.
@@ -110,6 +110,24 @@ OBS render statistics during the functional pass (steady state):
 
 The live test also asserts that the filter actually changes pixels
 (`filter_rendered: true`) rather than silently passing video through.
+
+### 3.3a Live transparency check — pass
+
+`tests\integration\obs_transparency_check.py` builds a scene with a solid
+colour source *behind* the webcam, sets ProMatte to transparent and screenshots
+the composited scene twice, with a magenta and then a green background. Run
+against the installed build on the real camera:
+
+| Metric | Result |
+| ------ | ------ |
+| Background visible through the matte | 74.6 % (magenta), 74.7 % (green) |
+| Pixels that follow whatever is behind the camera | 73.5 % |
+| Pixels that change when the background colour changes | 90.4 % |
+| Verdict | pass — the subject is cut out and the scene behind shows through |
+
+This is the end-to-end counterpart of the headless compositing test, and it is
+what confirms the defect in §9 is fixed in a real OBS scene rather than only in
+the harness.
 
 ### 3.4 Stress / soak
 

@@ -7,12 +7,23 @@ namespace promatte {
 const std::vector<PresetInfo> &presetList()
 {
 	static const std::vector<PresetInfo> presets = {
-		{"webcam", "Preset.Webcam"},          {"talking_head", "Preset.TalkingHead"},
-		{"gaming", "Preset.Gaming"},          {"high_quality", "Preset.HighQuality"},
-		{"low_end", "Preset.LowEnd"},         {"green_screen", "Preset.GreenScreen"},
-		{"custom", "Preset.Custom"},
+		{"webcam", "Preset.Webcam", "Preset.Webcam.Desc"},
+		{"talking_head", "Preset.TalkingHead", "Preset.TalkingHead.Desc"},
+		{"gaming", "Preset.Gaming", "Preset.Gaming.Desc"},
+		{"high_quality", "Preset.HighQuality", "Preset.HighQuality.Desc"},
+		{"low_end", "Preset.LowEnd", "Preset.LowEnd.Desc"},
+		{"green_screen", "Preset.GreenScreen", "Preset.GreenScreen.Desc"},
+		{"custom", "Preset.Custom", "Preset.Custom.Desc"},
 	};
 	return presets;
+}
+
+const char *presetDescriptionKey(const std::string &id)
+{
+	for (const auto &p : presetList())
+		if (id == p.id)
+			return p.descriptionKey;
+	return "Preset.Custom.Desc";
 }
 
 bool applyPreset(const std::string &id, obs_data_t *d)

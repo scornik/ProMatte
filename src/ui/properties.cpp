@@ -42,11 +42,20 @@ bool onModeChanged(obs_properties_t *props, obs_property_t *, obs_data_t *settin
 	return true;
 }
 
-bool onPresetChanged(obs_properties_t *, obs_property_t *, obs_data_t *settings)
+// What the selected preset changes, plus the standing reminder that presets
+// never touch framing (users reasonably read "Talking Head" as a crop).
+std::string presetInfoText(const std::string &id)
+{
+	return std::string(T(presetDescriptionKey(id))) + "\n\n" + T("Preset.NoFraming");
+}
+
+bool onPresetChanged(obs_properties_t *props, obs_property_t *, obs_data_t *settings)
 {
 	std::string id = obs_data_get_string(settings, keys::Preset);
+	if (obs_property_t *info = obs_properties_get(props, "preset_info"))
+		obs_property_set_description(info, presetInfoText(id).c_str());
 	if (id == "custom")
-		return false;
+		return true; // still refresh so the description updates
 	applyPreset(id, settings);
 	return true; // refresh the panel so the sliders show the preset values
 }
@@ -211,6 +220,17 @@ obs_properties_t *buildProperties(void *data)
 	for (const auto &p : presetList())
 		obs_property_list_add_string(preset, T(p.localeKey), p.id);
 	obs_property_set_modified_callback(preset, onPresetChanged);
+	// Say what the selected preset actually does. Presets tune matte quality and
+	// cost only, so this also states plainly that they never change framing.
+	{
+		std::string current = "webcam";
+		if (ctx) {
+			obs_data_t *settings = obs_source_get_settings(ctx->source);
+			current = obs_data_get_string(settings, keys::Preset);
+			obs_data_release(settings);
+		}
+		obs_properties_add_text(props, "preset_info", presetInfoText(current).c_str(), OBS_TEXT_INFO);
+	}
 
 	// --- Background --------------------------------------------------------
 	obs_properties_t *bg = obs_properties_create();
