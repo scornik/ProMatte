@@ -171,7 +171,10 @@ jobs:
           cd build
           cpack -V || true
           echo "--- what CPack actually staged ---"
-          find _CPack_Packages -maxdepth 7 -not -path "*/Contents/Packages/*" | head -40
+          staged="$(find _CPack_Packages -type d -name plugins | head -1)"
+          echo "staging root: $staged"
+          du -sh "$staged" || true
+          find "$staged" -maxdepth 3 | head -20
       - name: Show the bundle layout and check the package is not empty
         run: |
           find build/promatte.plugin -maxdepth 3 | head -30

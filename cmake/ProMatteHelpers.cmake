@@ -119,7 +119,7 @@ function(promatte_install_plugin target)
         # built bundle directory instead so the models, effects, locale and the
         # vendored ONNX Runtime all travel with it.
         install(DIRECTORY "${CMAKE_BINARY_DIR}/promatte.plugin"
-                DESTINATION "." COMPONENT plugin USE_SOURCE_PERMISSIONS)
+                DESTINATION "." USE_SOURCE_PERMISSIONS)
     else()
         install(TARGETS ${target} LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/obs-plugins" COMPONENT plugin)
         install(DIRECTORY "${CMAKE_SOURCE_DIR}/data/"
