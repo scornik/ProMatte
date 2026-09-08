@@ -1,0 +1,150 @@
+// Full-resolution matte refinement.
+//
+//  Upsample3 / Upsample5 : joint bilateral upsampling of the low-resolution
+//                          matte guided by the full-resolution image. Produces
+//                          crisp, edge-aligned alpha without the blockiness of
+//                          plain bilinear upscaling. Output: r = refined alpha,
+//                          g = bilinear alpha (for the confidence debug view).
+//  FeatherH / FeatherV   : separable Gaussian feathering of the alpha plane.
+uniform float4x4 ViewProj;
+uniform texture2d image;      // full-resolution source (guide)
+uniform texture2d matte;      // low-resolution guide: rgb = downscaled colour, a = alpha
+uniform texture2d guideLow;   // low-resolution colour (only used by the Merge pass)
+uniform float2 lowSize;       // matte texture size in pixels
+uniform float2 lowTexel;      // 1 / lowSize
+uniform float  rangeSigma;    // colour similarity sigma (0.05..0.3)
+uniform float2 texel;         // 1 / output size (feather)
+uniform float  radius;        // feather radius in output pixels
+uniform float2 direction;     // (1,0) or (0,1)
+
+sampler_state linearSampler {
+	Filter    = Linear;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+};
+sampler_state pointSampler {
+	Filter    = Point;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+};
+
+struct VertData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertData VSDefault(VertData v_in)
+{
+	VertData vert_out;
+	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = v_in.uv;
+	return vert_out;
+}
+
+float colourDistance(float3 a, float3 b)
+{
+	float3 d = abs(a - b);
+	// luma-weighted L1 distance
+	return d.r * 0.4 + d.g * 0.45 + d.b * 0.15;
+}
+
+// One sample per neighbour: the low-resolution texture carries the guide colour
+// in rgb and the matte in a, so colour similarity and alpha come from the same fetch.
+float4 jbu(float2 uv, int r)
+{
+	float3 guide = image.Sample(linearSampler, uv).rgb;
+	float2 lowPos = uv * lowSize - 0.5;
+	float2 base = floor(lowPos);
+	float invRange = 1.0 / max(rangeSigma, 0.01);
+	float sumW = 0.0;
+	float sumA = 0.0;
+	for (int dy = -r + 1; dy <= r; ++dy) {
+		for (int dx = -r + 1; dx <= r; ++dx) {
+			float2 q = base + float2(dx, dy);
+			float4 low = matte.Sample(pointSampler, (q + 0.5) * lowTexel);
+			float2 d = lowPos - q;
+			float spatial = exp(-dot(d, d) * 0.5);
+			float cd = colourDistance(guide, low.rgb) * invRange;
+			float range = exp(-cd * cd * 0.5);
+			float w = spatial * range + 1e-5;
+			sumW += w;
+			sumA += w * low.a;
+		}
+	}
+	float bilinear = matte.Sample(linearSampler, uv).a;
+	float a = sumW > 1e-3 ? sumA / sumW : bilinear;
+	return float4(a, bilinear, 0.0, 1.0);
+}
+
+// Packs the AI-resolution colour (rgb) and the model matte (a) into one texture.
+float4 PSMerge(VertData v_in) : TARGET
+{
+	float3 colour = guideLow.Sample(pointSampler, v_in.uv).rgb;
+	float alpha = matte.Sample(pointSampler, v_in.uv).a;
+	return float4(colour, alpha);
+}
+
+float4 PSUpsample3(VertData v_in) : TARGET
+{
+	return jbu(v_in.uv, 1); // 2x2 neighbourhood weighted (fast)
+}
+
+float4 PSUpsample5(VertData v_in) : TARGET
+{
+	return jbu(v_in.uv, 2); // 4x4 neighbourhood weighted
+}
+
+float4 PSFeather(VertData v_in) : TARGET
+{
+	// 9-tap Gaussian (sigma = radius / 2) sampled at multiples of radius / 4.
+	float step = max(radius, 0.001) * 0.25;
+	float2 d = direction * texel * step;
+	float w0 = 0.2270270270, w1 = 0.1945945946, w2 = 0.1216216216, w3 = 0.0540540541, w4 = 0.0162162162;
+	float a = image.Sample(linearSampler, v_in.uv).r * w0;
+	a += image.Sample(linearSampler, v_in.uv + d * 1.0).r * w1;
+	a += image.Sample(linearSampler, v_in.uv - d * 1.0).r * w1;
+	a += image.Sample(linearSampler, v_in.uv + d * 2.0).r * w2;
+	a += image.Sample(linearSampler, v_in.uv - d * 2.0).r * w2;
+	a += image.Sample(linearSampler, v_in.uv + d * 3.0).r * w3;
+	a += image.Sample(linearSampler, v_in.uv - d * 3.0).r * w3;
+	a += image.Sample(linearSampler, v_in.uv + d * 4.0).r * w4;
+	a += image.Sample(linearSampler, v_in.uv - d * 4.0).r * w4;
+	float g = image.Sample(linearSampler, v_in.uv).g;
+	return float4(a, g, 0.0, 1.0);
+}
+
+technique Merge
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSMerge(v_in);
+	}
+}
+
+technique Upsample3
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSUpsample3(v_in);
+	}
+}
+
+technique Upsample5
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSUpsample5(v_in);
+	}
+}
+
+technique Feather
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSFeather(v_in);
+	}
+}

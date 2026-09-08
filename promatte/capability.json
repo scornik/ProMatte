@@ -1,0 +1,27 @@
+{
+  "Intel(R) Core(TM) i7-7500U CPU @ 2.70GHz (2 threads)|cpu": {
+    "mediapipe_selfie_landscape": {
+      "budget_ms": 50.0,
+      "cost_ms": 37.058567482874146,
+      "slow_count": 0,
+      "too_slow": false,
+      "updated": 1788842014
+    }
+  },
+  "NVIDIA GeForce 940MX|directml": {
+    "mediapipe_selfie_landscape": {
+      "budget_ms": 33.333333333333336,
+      "cost_ms": 25.207395700242273,
+      "slow_count": 0,
+      "too_slow": false,
+      "updated": 1788842082
+    },
+    "pphumanseg_v2_lite": {
+      "budget_ms": 33.333333333333336,
+      "cost_ms": 558.0552190615849,
+      "slow_count": 1,
+      "too_slow": false,
+      "updated": 1788839957
+    }
+  }
+}

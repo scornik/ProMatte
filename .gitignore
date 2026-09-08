@@ -1,0 +1,31 @@
+# Build / deps
+build/
+build_*/
+.deps/
+*.user
+.vs/
+.vscode/
+CMakeUserPresets.json
+# Models (downloaded by Model Manager / tooling, not committed)
+models/candidates/
+models/converted/
+*.onnx
+*.ort
+*.tflite
+*.nupkg
+*.zip
+# Python
+__pycache__/
+*.pyc
+.venv/
+# Benchmark output
+tools/benchmark/results/
+# Installer output
+installer/output/
+# Logs
+*.log
+
+# Live-test output (webcam screenshots/recordings of the local machine)
+tests/visual/live/
+tests/visual/frames/
+tests/visual/assets/*.jpg

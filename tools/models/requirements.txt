@@ -1,0 +1,10 @@
+onnx>=1.16
+onnxruntime-directml>=1.20
+onnxsim>=0.4
+numpy>=1.26
+opencv-python>=4.9
+tf2onnx>=1.16
+tensorflow-cpu>=2.16,<2.20
+paddle2onnx<2
+paddlepaddle>=3.0
+obsws-python>=1.7

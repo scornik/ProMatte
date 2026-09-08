@@ -1,0 +1,45 @@
+// Area-filtered downscale of the source frame to AI resolution.
+// Four bilinear taps at +-offset approximate a box filter over the source
+// footprint of each destination pixel (good for 2x-6x reductions).
+uniform float4x4 ViewProj;
+uniform texture2d image;
+uniform float2 offset; // (scale_x / 4, scale_y / 4) in source texels
+
+sampler_state linearSampler {
+	Filter    = Linear;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+};
+
+struct VertData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertData VSDefault(VertData v_in)
+{
+	VertData vert_out;
+	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = v_in.uv;
+	return vert_out;
+}
+
+float4 PSDownscale(VertData v_in) : TARGET
+{
+	float4 c = image.Sample(linearSampler, v_in.uv + float2(-offset.x, -offset.y));
+	c += image.Sample(linearSampler, v_in.uv + float2( offset.x, -offset.y));
+	c += image.Sample(linearSampler, v_in.uv + float2(-offset.x,  offset.y));
+	c += image.Sample(linearSampler, v_in.uv + float2( offset.x,  offset.y));
+	c *= 0.25;
+	c.a = 1.0;
+	return c;
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSDownscale(v_in);
+	}
+}
