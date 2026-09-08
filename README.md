@@ -50,12 +50,19 @@ artifacts.
 ### Installing on Linux
 
 ```bash
-sudo dpkg -i promatte_1.0.0_amd64.deb     # or: tar xzf promatte_*.tar.gz -C ~/.config/obs-studio/plugins
+sudo dpkg -i promatte_1.0.0_amd64.deb
 ```
 
-The package installs `promatte.so` into `/usr/lib/obs-plugins` and its data into
+Or, on a distribution without dpkg, the tarball holds the same `usr/` tree:
+
+```bash
+sudo tar xzf promatte_1.0.0_linux-x86_64.tar.gz --strip-components=1 -C /
+```
+
+Either way `promatte.so` lands in `/usr/lib/obs-plugins` and its data in
 `/usr/share/obs/obs-plugins/promatte`, which is where a distribution OBS looks.
-ONNX Runtime is shipped beside the module because no distribution packages it.
+ONNX Runtime is shipped beside the module in `/usr/lib/obs-plugins/promatte/`
+because no distribution packages it, and the module's `RUNPATH` points there.
 
 ### Installing on macOS
 
