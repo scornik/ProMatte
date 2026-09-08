@@ -67,7 +67,13 @@ jobs:
       - name: Unit tests
         run: LD_LIBRARY_PATH="$ORT_ROOT/lib" ./build/bin/promatte-unit-tests
       - name: Package
-        run: cd build && cpack
+        run: |
+          cd build && cpack
+          size=$(stat -c%s promatte_*.deb)
+          echo "package size: $size bytes"
+          if [ "$size" -lt 10000000 ]; then
+            echo "package is too small to contain the models and runtime"; exit 1
+          fi
       - name: Verify the package installs and the module loads
         run: |
           sudo dpkg -i build/promatte_*.deb
@@ -162,10 +168,17 @@ jobs:
         run: DYLD_LIBRARY_PATH="$ORT_ROOT/lib" ./build/bin/promatte-unit-tests
       - name: Package
         run: cd build && cpack
-      - name: Show the bundle layout
+      - name: Show the bundle layout and check the package is not empty
         run: |
           find build/promatte.plugin -maxdepth 3 | head -30
           otool -L build/promatte.plugin/Contents/MacOS/promatte | head
+          # The bundle carries the models and ONNX Runtime, so a .pkg that comes
+          # out tiny means the install rules dropped its contents.
+          size=$(stat -f%z build/*.pkg)
+          echo "package size: $size bytes"
+          if [ "$size" -lt 10000000 ]; then
+            echo "package is too small to contain the models and runtime"; exit 1
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: promatte-macos-arm64
