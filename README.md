@@ -32,7 +32,7 @@ See [docs/troubleshooting.md](docs/troubleshooting.md) if something looks wrong.
 
 | | Minimum | Recommended |
 | - | - | - |
-| OS | Windows 10 1903 64-bit, Ubuntu 22.04 or macOS 11 | Windows 11 |
+| OS | Windows 10 1903 64-bit, Ubuntu 22.04, or macOS 11 (Intel or Apple Silicon) | Windows 11 |
 | OBS | 30.0 | 31 / 32 |
 | GPU | any D3D12-capable GPU, or CPU only | NVIDIA GTX 1050 / AMD RX 560 / Intel Arc or newer |
 | CPU (CPU-only mode) | 4 threads | 8 threads |
@@ -44,7 +44,7 @@ See [docs/troubleshooting.md](docs/troubleshooting.md) if something looks wrong.
 | -------- | ------- | ---------------- | ----- |
 | Windows x64 | `ProMatte-Setup-<version>.exe` | DirectML on any D3D12 GPU (NVIDIA / AMD / Intel); CUDA and TensorRT when an ONNX Runtime build providing them is installed | released and verified on real hardware, see [docs/final-verification.md](docs/final-verification.md) |
 | Linux x86_64 | `.deb` and `.tar.gz` | CPU; CUDA when an ONNX Runtime build providing it is installed | builds, unit tests pass, package installs and the module loads; not yet exercised against a running OBS |
-| macOS arm64 | `.zip` / `.tar.gz` of `promatte.plugin` | CPU; CoreML when an ONNX Runtime build providing it is installed | built, unit-tested and packaged by CI; never run inside OBS by the author, see the limitations in [docs/final-verification.md](docs/final-verification.md) |
+|  macOS (Intel + Apple Silicon) | `.zip` / `.tar.gz` of `promatte.plugin` | CPU; CoreML when an ONNX Runtime build providing it is installed | built, unit-tested and packaged by CI; never run inside OBS by the author, see the limitations in [docs/final-verification.md](docs/final-verification.md) |
 
 Packages for Linux and macOS are produced by
 [the build workflow](.github/workflows/build.yml) and attached to each run as
@@ -53,13 +53,13 @@ artifacts.
 ### Installing on Linux
 
 ```bash
-sudo dpkg -i promatte_1.0.0_amd64.deb
+sudo dpkg -i promatte_1.0.1_amd64.deb
 ```
 
 Or, on a distribution without dpkg, the tarball holds the same `usr/` tree:
 
 ```bash
-sudo tar xzf promatte_1.0.0_linux-x86_64.tar.gz --strip-components=1 -C /
+sudo tar xzf promatte_1.0.1_linux-x86_64.tar.gz --strip-components=1 -C /
 ```
 
 Either way `promatte.so` lands in `/usr/lib/obs-plugins` and its data in
@@ -72,7 +72,7 @@ because no distribution packages it, and the module's `RUNPATH` points there.
 Unpack the archive and move the bundle into your plugins directory:
 
 ```bash
-unzip ProMatte-1.0.0-macos-arm64.zip
+unzip ProMatte-1.0.1-macos-universal.zip
 mkdir -p ~/Library/Application\ Support/obs-studio/plugins
 mv promatte.plugin ~/Library/Application\ Support/obs-studio/plugins/
 ```

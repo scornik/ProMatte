@@ -1,6 +1,6 @@
 # ProMatte — Final Verification Report
 
-Version 1.0.0 · verification run 2026-09-08.
+Version 1.0.1 · verification run 2026-09-08.
 
 Everything below is measured on the machine described in §2. Numbers come from
 `tools/benchmark` (JSON in `tools/benchmark/results/`), the headless libobs
@@ -22,7 +22,7 @@ says so; nothing in this report is estimated or extrapolated.
 | OBS Studio used for testing | 32.2.2 (64-bit) |
 | ONNX Runtime | 1.24.4 (DirectML build) |
 | DirectML | 1.15.4 |
-| Plugin version | 1.0.0 |
+| Plugin version | 1.0.1 |
 | Warnings | none at `/W4` in ProMatte sources |
 
 Artefacts:
@@ -265,7 +265,7 @@ in `build/bench-dump/`.
 | -------- | ------ | ---------- | ------- | ------------ | ------------------------- |
 | Windows x64 (MSVC) | yes | 36/36 | `ProMatte-Setup-1.0.0.exe` | yes | yes, everything in this report |
 | Linux x86_64 (GCC 13, Ubuntu 24.04) | yes | 36/36 | `.deb` + `.tar.gz` | module `dlopen`s and resolves `obs_module_load`; all shared-library dependencies resolve | **no** |
-| macOS arm64 (Apple clang, macos-15) | yes, in CI | 36/36 in CI | `.zip` + `.tar.gz` of `promatte.plugin` | **not checked** | **no** |
+| macOS universal, Intel + Apple Silicon (Apple clang, macos-15) | yes, in CI | 36/36 in CI, arm64 slice | `.zip` + `.tar.gz` of `promatte.plugin` | **not checked** | **no** |
 
 Linux was built and tested in a WSL Ubuntu 24.04 container against the
 distribution's libobs 30.0.2 and an upstream ONNX Runtime 1.24.4 tarball. The
@@ -309,6 +309,14 @@ macOS is distributed as an archive rather than an installer package: CPack's
 productbuild generator staged the bundle correctly but emitted an 8 KB
 distribution wrapper with no payload, which would have been an installer that
 installs nothing.
+
+The bundle is a universal binary. CI asserts with `lipo` that both the module
+and the vendored ONNX Runtime carry an `x86_64` and an `arm64` slice, because a
+package that silently lost one would still install and then fail to load on the
+other kind of Mac. macOS pins ONNX Runtime 1.23.0, the last release with a
+universal2 build; 1.24 is Apple Silicon only. Only the arm64 slice is executed
+by the unit tests, since the runner is Apple Silicon: the x86_64 slice is
+verified structurally, not run.
 
 ## 8. Known limitations
 
