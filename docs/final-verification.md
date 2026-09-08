@@ -1,6 +1,6 @@
 # ProMatte — Final Verification Report
 
-Version 1.0.1 · verification run 2026-09-08.
+Version 1.0.2 · verification run 2026-09-08.
 
 Everything below is measured on the machine described in §2. Numbers come from
 `tools/benchmark` (JSON in `tools/benchmark/results/`), the headless libobs
@@ -22,7 +22,7 @@ says so; nothing in this report is estimated or extrapolated.
 | OBS Studio used for testing | 32.2.2 (64-bit) |
 | ONNX Runtime | 1.24.4 (DirectML build) |
 | DirectML | 1.15.4 |
-| Plugin version | 1.0.1 |
+| Plugin version | 1.0.2 |
 | Warnings | none at `/W4` in ProMatte sources |
 
 Artefacts:
@@ -265,7 +265,7 @@ in `build/bench-dump/`.
 | -------- | ------ | ---------- | ------- | ------------ | ------------------------- |
 | Windows x64 (MSVC) | yes | 36/36 | `ProMatte-Setup-1.0.0.exe` | yes | yes, everything in this report |
 | Linux x86_64 (GCC 13, Ubuntu 24.04) | yes | 36/36 | `.deb` + `.tar.gz` | module `dlopen`s and resolves `obs_module_load`; all shared-library dependencies resolve | **no** |
-| macOS universal, Intel + Apple Silicon (Apple clang, macos-15) | yes, in CI | 36/36 in CI, arm64 slice | `.zip` + `.tar.gz` of `promatte.plugin` | **not checked** | **no** |
+| macOS universal, Intel + Apple Silicon (Apple clang, macos-15) | yes, in CI | 36/36 in CI, arm64 slice | `.zip` + `.tar.gz` of `promatte.plugin` | every load command resolves against the bundle; 1.0.1 did **not** load, see below | **no** |
 
 Linux was built and tested in a WSL Ubuntu 24.04 container against the
 distribution's libobs 30.0.2 and an upstream ONNX Runtime 1.24.4 tarball. The
@@ -298,12 +298,46 @@ the run identifies the machine as "Ubuntu 24.04.4 LTS" through the new
 
 macOS is built, unit-tested and packaged by the CI workflow on a `macos-15`
 runner against a libobs 31.1.1 built from source there; the 36 unit tests pass
-on Apple Silicon. The archive was downloaded and inspected: `promatte.plugin`
-contains `Contents/MacOS/promatte`, `Contents/Info.plist`, all five bundled
-models under `Contents/Resources/models`, the effects and locale, and a vendored
-`libonnxruntime.dylib` in `Contents/Frameworks`. What has **not** happened is
-loading it in OBS on a Mac, because the author has none. Treat macOS as
-"compiles, links, passes its unit tests and packages correctly", nothing more.
+on Apple Silicon. What has **not** happened is loading it in OBS on a Mac,
+because the author has none.
+
+**1.0.1 did not load, and this section previously overstated what "packaged
+correctly" was worth.** A user ran the 1.0.1 bundle on an M1 and OBS 32.2.2
+reported "the following OBS plugins failed to load: promatte". The archive had
+been inspected exactly as described above — the right files were in the right
+directories — and that told us nothing, because the fault was in the binary's
+load commands, not in the file layout. Two faults, either fatal alone:
+
+* the module's only `LC_RPATH` was `@loader_path/../Frameworks`, which points
+  inside ProMatte's own bundle, so its dependency on
+  `@rpath/libobs.framework/Versions/A/libobs` had nowhere to resolve — libobs is
+  in `OBS.app/Contents/Frameworks` and the plugin sits outside the app;
+* the vendored ONNX Runtime was written under the name of the file on disk,
+  `libonnxruntime.dylib`, while the dependency recorded in the module was
+  `@rpath/libonnxruntime.1.23.0.dylib` — the upstream tarball's filename and its
+  recorded install name are different strings — so the file dyld asked for was
+  not in the bundle. The `install_name_tool -change` meant to redirect it used
+  the same wrong name; that command exits 0 and does nothing when its "from"
+  string matches no load command, so it failed silently.
+
+Both are fixed in 1.0.2. `cmake/macos/finalise-bundle.sh` now reads the install
+name out of the dylib with `otool -D` rather than deriving it from a path, and
+checks the rewrite landed. `tools/check-macos-bundle.py` parses the Mach-O load
+commands and resolves every one against the bundle: system libraries pass,
+`@loader_path` dependencies must exist on disk, `@rpath` dependencies must be
+reachable through an rpath that is present, and anything OBS.app supplies
+requires an `@executable_path` rpath. CI runs it on the built bundle and again on
+the unpacked archive, and it was run a third time on the downloaded 1.0.2 release
+artifact. Against the 1.0.1 bundle it reports six failures. The bundle is also
+sealed with an ad-hoc `codesign` now, since rewriting load commands invalidates
+the signature the linker produced and arm64 code needs a valid one to load.
+
+So macOS for 1.0.2 is "compiles, links, passes its unit tests, packages
+correctly, and every dynamic-library reference in the shipped binary provably
+resolves". That is strictly more than 1.0.1 could claim and still less than
+having watched it load. In particular, a symbol-level mismatch between the libobs
+31.1.1 headers this is built against and the libobs inside OBS 32.x would not be
+caught by any of the above.
 
 macOS is distributed as an archive rather than an installer package: CPack's
 productbuild generator staged the bundle correctly but emitted an 8 KB
