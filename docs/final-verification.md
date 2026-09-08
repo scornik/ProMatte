@@ -275,6 +275,27 @@ and `RUNPATH=$ORIGIN/promatte`; `ldd` reports no unresolved libraries and a
 running it inside a real OBS against a camera, because the container has no GPU
 or display.
 
+Inference itself was exercised on Linux with the same benchmark and the same
+1280x720 portrait frames used for the Windows numbers in §4.1, on the same CPU
+(the WSL container sees the host's i7-7500U). ONNX Runtime, the pre-processing,
+the refinement and the temporal stage all run:
+
+| Model | AI input | Inference ms (p95) | Total ms | AI FPS | CPU % |
+| ----- | -------- | -----------------: | -------: | -----: | ----: |
+| MediaPipe Selfie general | 256x256 | 8.2 (9.0) | 9.7 | 100.2 | 48 |
+| MediaPipe Selfie landscape | 256x144 | 10.6 (27.9) | 12.3 | 79.9 | 55 |
+| PP-HumanSeg v2 portrait | 256x144 | 17.9 (34.7) | 19.3 | 51.2 | 49 |
+| PP-HumanSeg v2 lite | 192x192 | 18.5 (40.2) | 19.5 | 51.0 | 49 |
+| RVM MobileNetV3 (Performance) | 512x288 | 81.9 (142.4) | 86.5 | 11.4 | 52 |
+| MODNet (Performance) | 320x192 | 164.2 (256.6) | 165.8 | 6.0 | 49 |
+| MediaPipe Selfie multiclass | 256x256 | 217.3 (338.0) | 219.9 | 4.5 | 48 |
+
+These land within a few milliseconds of the Windows CPU figures for the same
+models on the same processor, which is the result to expect and a useful check
+that nothing in the port changed the numerics. The platform reporting works too:
+the run identifies the machine as "Ubuntu 24.04.4 LTS" through the new
+`/etc/os-release` path rather than the old "Unknown OS".
+
 macOS is built and packaged by the CI workflow on a `macos-14` runner and has
 never been executed by the author. Treat the macOS package as untested beyond
 "it compiles, links, packages and its unit tests pass".
