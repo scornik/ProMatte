@@ -15,6 +15,9 @@ replacement filter for OBS Studio. Add it to your webcam and choose *Remove*,
   hardware and steps down gracefully when the machine is busy.
 * Model Manager with licence-checked models, checksums and offline operation.
 
+**Downloads:** [latest release](https://github.com/scornik/ProMatte/releases/latest)
+— Windows installer, Linux `.deb`/`.tar.gz`, macOS bundle archive.
+
 ## Quick start (users)
 
 1. Run `ProMatte-Setup.exe` (Windows 10/11 64-bit, OBS 30.0 or newer).
