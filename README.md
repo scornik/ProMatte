@@ -29,13 +29,43 @@ See [docs/troubleshooting.md](docs/troubleshooting.md) if something looks wrong.
 
 | | Minimum | Recommended |
 | - | - | - |
-| OS | Windows 10 1903 64-bit | Windows 11 |
+| OS | Windows 10 1903 64-bit, Ubuntu 22.04 or macOS 11 | Windows 11 |
 | OBS | 30.0 | 31 / 32 |
 | GPU | any D3D12-capable GPU, or CPU only | NVIDIA GTX 1050 / AMD RX 560 / Intel Arc or newer |
 | CPU (CPU-only mode) | 4 threads | 8 threads |
 | Camera | 720p | 1080p 30 fps |
 
+### Platform support
+
+| Platform | Package | GPU acceleration | State |
+| -------- | ------- | ---------------- | ----- |
+| Windows x64 | `ProMatte-Setup-<version>.exe` | DirectML on any D3D12 GPU (NVIDIA / AMD / Intel); CUDA and TensorRT when an ONNX Runtime build providing them is installed | released and verified on real hardware, see [docs/final-verification.md](docs/final-verification.md) |
+| Linux x86_64 | `.deb` and `.tar.gz` | CPU; CUDA when an ONNX Runtime build providing it is installed | builds, unit tests pass, package installs and the module loads; not yet exercised against a running OBS |
+| macOS arm64 | `.pkg` | CPU; CoreML when an ONNX Runtime build providing it is installed | built and packaged by CI only; never run by the author, see the limitations in [docs/final-verification.md](docs/final-verification.md) |
+
+Packages for Linux and macOS are produced by
+[the build workflow](.github/workflows/build.yml) and attached to each run as
+artifacts.
+
+### Installing on Linux
+
+```bash
+sudo dpkg -i promatte_1.0.0_amd64.deb     # or: tar xzf promatte_*.tar.gz -C ~/.config/obs-studio/plugins
+```
+
+The package installs `promatte.so` into `/usr/lib/obs-plugins` and its data into
+`/usr/share/obs/obs-plugins/promatte`, which is where a distribution OBS looks.
+ONNX Runtime is shipped beside the module because no distribution packages it.
+
+### Installing on macOS
+
+Open the `.pkg`. It installs `promatte.plugin` into
+`/Library/Application Support/obs-studio/plugins`. The bundle is unsigned, so
+Gatekeeper will ask you to allow it in System Settings the first time.
+
 ## Building from source
+
+### Windows
 
 Prerequisites: Visual Studio 2022/2026 Build Tools (C++ workload), CMake ≥ 3.28,
 Python 3.12 (for model conversion only), Inno Setup 6 (installer only).
@@ -66,6 +96,35 @@ powershell -ExecutionPolicy Bypass -File installer/build-installer.ps1
 
 The staged plugin tree is in `build/stage/` and mirrors the OBS install layout.
 
+### Linux
+
+```bash
+sudo apt install build-essential cmake ninja-build pkg-config \
+     libobs-dev libcurl4-openssl-dev nlohmann-json3-dev
+
+# ONNX Runtime is not packaged by any distribution; use the upstream release
+curl -fsSLO https://github.com/microsoft/onnxruntime/releases/download/v1.24.4/onnxruntime-linux-x64-1.24.4.tgz
+tar xzf onnxruntime-linux-x64-1.24.4.tgz
+
+python3 -m pip install -r tools/models/requirements.txt   # bundled models, one-time
+python3 tools/models/convert_models.py && python3 tools/models/fix_pphumanseg.py
+
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+      -DPROMATTE_ORT_ROOT="$PWD/onnxruntime-linux-x64-1.24.4"
+cmake --build build --parallel
+LD_LIBRARY_PATH="$PWD/onnxruntime-linux-x64-1.24.4/lib" ./build/bin/promatte-unit-tests
+cd build && cpack          # produces the .deb and the .tar.gz
+```
+
+### macOS
+
+`libobs` is not available as a Homebrew formula, so build the library on its own
+first; [the CI workflow](.github/workflows/build.yml) does exactly this and is
+the reference for the steps. Then configure with `-DCMAKE_PREFIX_PATH` pointing
+at the resulting SDK and `-DPROMATTE_ORT_ROOT` at an
+`onnxruntime-osx-arm64-<version>` tarball, build, and run `cpack` to get the
+`.pkg`.
+
 ## Repository layout
 
 ```
@@ -79,7 +138,7 @@ src/preprocessing/         BGRA → tensor conversion, resizing
 src/postprocessing/        CPU matte refinement (confidence curve, morphology, components)
 src/temporal/              motion-adaptive temporal stabiliser
 src/performance/           adaptive quality controller and statistics
-src/models/                model manager + WinHTTP downloader
+src/models/                model manager + downloader (WinHTTP on Windows, libcurl elsewhere)
 src/ui/                    OBS properties panel
 data/                      effects, locale, model manifest (+ bundled models after conversion)
 models/                    model documentation and conversion outputs
