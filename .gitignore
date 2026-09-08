@@ -29,6 +29,7 @@ installer/output/
 # Live-test output (webcam screenshots/recordings of the local machine)
 tests/visual/live/
 tests/visual/debug/
+tests/visual/transparency/
 tests/visual/frames/
 tests/visual/assets/*.jpg
 
