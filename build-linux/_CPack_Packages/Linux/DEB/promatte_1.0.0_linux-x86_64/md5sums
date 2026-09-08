@@ -1,0 +1,15 @@
+2863fe104cf1a23441431773ec5d38e4  usr/lib/obs-plugins/promatte.so
+97199fcd7f8f4536e72187890168e67c  usr/lib/obs-plugins/promatte/libonnxruntime.so.1.24.4
+570a9b3749dd0463a1778803b12a6dce  usr/share/doc/promatte/LICENSE
+4fc897999ec7719793e35fc1ea2a92ab  usr/share/doc/promatte/THIRD_PARTY_LICENSES.md
+eff1406ecf524c13da057b0deca34664  usr/share/obs/obs-plugins/promatte/effects/promatte_blur.effect
+c9571b66f7118a69a20197ffcc04afe2  usr/share/obs/obs-plugins/promatte/effects/promatte_composite.effect
+3ce9146dc8a4a9b5938ceec7321b678e  usr/share/obs/obs-plugins/promatte/effects/promatte_downscale.effect
+781229984c511e7e2fe95fc8231082e2  usr/share/obs/obs-plugins/promatte/effects/promatte_refine.effect
+db6d9754a7337202a1fafeedbd78df3f  usr/share/obs/obs-plugins/promatte/locale/en-US.ini
+a194e45e29ace3902d218fec189dcf83  usr/share/obs/obs-plugins/promatte/models/manifest.json
+133a94fc04b32457cf060c899008b829  usr/share/obs/obs-plugins/promatte/models/mediapipe_selfie_general_256.onnx
+436c1e9de2cb78b52dc85378ccff1d50  usr/share/obs/obs-plugins/promatte/models/mediapipe_selfie_landscape_144x256.onnx
+85a7b764ebb6e15446d6fc6ebf558fb9  usr/share/obs/obs-plugins/promatte/models/mediapipe_selfie_multiclass_256.onnx
+7660c56354aa570d50fb5d5e3aa79a37  usr/share/obs/obs-plugins/promatte/models/pphumanseg_v2_lite_192.onnx
+72d53ca79c31cd98d8c314148957339e  usr/share/obs/obs-plugins/promatte/models/pphumanseg_v2_portrait_256x144.onnx

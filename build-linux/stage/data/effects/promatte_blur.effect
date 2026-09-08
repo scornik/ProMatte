@@ -1,0 +1,110 @@
+// Person-excluded background blur (dual Kawase).
+//
+// The source is premultiplied by (1 - alpha) so the person does not bleed into
+// the blurred background ("ghost halo"); after blurring the colour is
+// re-normalised by the accumulated weight, which also yields a plausible
+// background estimate behind the subject. That estimate is reused for edge
+// decontamination and halo removal in the composite pass.
+uniform float4x4 ViewProj;
+uniform texture2d image;
+uniform texture2d alphaTex; // full-resolution refined alpha (r)
+uniform float2 texel;       // 1 / size of `image`
+uniform float  offset;      // Kawase offset multiplier (0.5 .. 3)
+
+sampler_state linearSampler {
+	Filter    = Linear;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+};
+
+struct VertData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertData VSDefault(VertData v_in)
+{
+	VertData vert_out;
+	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = v_in.uv;
+	return vert_out;
+}
+
+float4 PSPremultiply(VertData v_in) : TARGET
+{
+	float4 c = image.Sample(linearSampler, v_in.uv);
+	float a = alphaTex.Sample(linearSampler, v_in.uv).r;
+	float w = 1.0 - a;
+	// Slightly erode the person so edge pixels (which contain mixed colour) do not
+	// contaminate the background estimate.
+	w = saturate(w * 1.25 - 0.25);
+	return float4(c.rgb * w, w);
+}
+
+float4 PSDown(VertData v_in) : TARGET
+{
+	float2 hp = texel * offset;
+	float4 s = image.Sample(linearSampler, v_in.uv) * 4.0;
+	s += image.Sample(linearSampler, v_in.uv + float2(-hp.x, -hp.y));
+	s += image.Sample(linearSampler, v_in.uv + float2( hp.x, -hp.y));
+	s += image.Sample(linearSampler, v_in.uv + float2(-hp.x,  hp.y));
+	s += image.Sample(linearSampler, v_in.uv + float2( hp.x,  hp.y));
+	return s * 0.125;
+}
+
+float4 PSUp(VertData v_in) : TARGET
+{
+	float2 hp = texel * offset;
+	float4 s = image.Sample(linearSampler, v_in.uv + float2(-hp.x * 2.0, 0.0));
+	s += image.Sample(linearSampler, v_in.uv + float2(-hp.x,  hp.y)) * 2.0;
+	s += image.Sample(linearSampler, v_in.uv + float2(0.0,  hp.y * 2.0));
+	s += image.Sample(linearSampler, v_in.uv + float2( hp.x,  hp.y)) * 2.0;
+	s += image.Sample(linearSampler, v_in.uv + float2( hp.x * 2.0, 0.0));
+	s += image.Sample(linearSampler, v_in.uv + float2( hp.x, -hp.y)) * 2.0;
+	s += image.Sample(linearSampler, v_in.uv + float2(0.0, -hp.y * 2.0));
+	s += image.Sample(linearSampler, v_in.uv + float2(-hp.x, -hp.y)) * 2.0;
+	return s / 12.0;
+}
+
+float4 PSNormalize(VertData v_in) : TARGET
+{
+	float4 s = image.Sample(linearSampler, v_in.uv);
+	float3 c = s.rgb / max(s.a, 1e-4);
+	return float4(c, saturate(s.a * 20.0)); // a = confidence of the estimate
+}
+
+technique Premultiply
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSPremultiply(v_in);
+	}
+}
+
+technique Down
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSDown(v_in);
+	}
+}
+
+technique Up
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSUp(v_in);
+	}
+}
+
+technique Normalize
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSNormalize(v_in);
+	}
+}

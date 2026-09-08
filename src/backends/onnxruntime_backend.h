@@ -67,9 +67,13 @@ private:
 	std::atomic<bool> cancelled_{false};
 
 	// D3D12/DirectML objects created for explicit adapter selection (DML1 API).
+	// Only defined in the Windows DirectML build; a unique_ptr to a type that is
+	// never completed will not compile its deleter elsewhere.
+#if defined(_WIN32) && defined(PROMATTE_HAVE_DIRECTML)
 	struct DmlDevice;
 	std::unique_ptr<DmlDevice> dmlDevice_;
 	bool appendDirectMLProvider(Ort::SessionOptions &so, int adapterIndex, std::string &deviceName);
+#endif
 };
 
 } // namespace promatte

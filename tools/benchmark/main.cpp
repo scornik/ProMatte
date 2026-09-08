@@ -5,9 +5,9 @@
 // quality proxies (temporal flicker on a quasi-static sequence, alpha softness).
 // Emits machine-readable JSON.
 //
-//   promatte-bench --manifest data/models/manifest.json --models-dir models/converted \
-//                  [--model <id>] [--backend auto|directml|cuda|tensorrt|cpu] [--tier N|all] \
-//                  [--frames 120] [--warmup 15] [--input <dir with .ppm frames>] \
+//   promatte-bench --manifest data/models/manifest.json --models-dir models/converted
+//                  [--model <id>] [--backend auto|directml|cuda|tensorrt|cpu] [--tier N|all]
+//                  [--frames 120] [--warmup 15] [--input <dir with .ppm frames>]
 //                  [--width 1280 --height 720] [--out results.json] [--dump-dir <dir>]
 #include <algorithm>
 #include <cmath>

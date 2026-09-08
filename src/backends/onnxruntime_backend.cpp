@@ -41,14 +41,6 @@ void ORT_API_CALL ortLogCallback(void *, OrtLoggingLevel severity, const char *,
 	}
 }
 
-bool nameMatches(const std::string &name, std::initializer_list<const char *> candidates)
-{
-	for (const char *c : candidates)
-		if (name == c)
-			return true;
-	return false;
-}
-
 } // namespace
 
 const char *backendKindName(BackendKind kind)

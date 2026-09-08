@@ -9,6 +9,8 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <winhttp.h>
+#else
+#include <curl/curl.h>
 #endif
 
 namespace promatte {
@@ -164,12 +166,122 @@ bool downloadFile(const std::string &url, const std::string &destPath, const Dow
 	return true;
 }
 
-#else
+#else // ---------------------------------------------------------------- POSIX
 
-bool downloadFile(const std::string &, const std::string &, const DownloadProgress &, std::string &error)
+namespace {
+
+struct WriteCtx {
+	std::FILE *file = nullptr;
+	const DownloadProgress *progress = nullptr;
+	uint64_t received = 0;
+	uint64_t total = 0;
+	bool cancelled = false;
+	bool writeFailed = false;
+};
+
+size_t writeCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
-	error = "model download is not implemented on this platform yet; place the model file manually";
-	return false;
+	auto *ctx = static_cast<WriteCtx *>(userdata);
+	const size_t bytes = size * nmemb;
+	if (std::fwrite(ptr, 1, bytes, ctx->file) != bytes) {
+		ctx->writeFailed = true;
+		return 0; // aborts the transfer
+	}
+	ctx->received += bytes;
+	if (ctx->progress && *ctx->progress && !(*ctx->progress)(ctx->received, ctx->total)) {
+		ctx->cancelled = true;
+		return 0;
+	}
+	return bytes;
+}
+
+int progressCallback(void *clientp, curl_off_t dltotal, curl_off_t, curl_off_t, curl_off_t)
+{
+	auto *ctx = static_cast<WriteCtx *>(clientp);
+	if (dltotal > 0)
+		ctx->total = uint64_t(dltotal);
+	return ctx->cancelled ? 1 : 0;
+}
+
+} // namespace
+
+bool downloadFile(const std::string &url, const std::string &destPath, const DownloadProgress &progress,
+		  std::string &error)
+{
+	if (url.rfind("https://", 0) != 0) {
+		error = "only https:// downloads are allowed";
+		return false;
+	}
+	CURL *curl = curl_easy_init();
+	if (!curl) {
+		error = "could not initialise libcurl";
+		return false;
+	}
+	const std::string tmpPath = destPath + ".part";
+	std::FILE *f = std::fopen(tmpPath.c_str(), "wb");
+	if (!f) {
+		curl_easy_cleanup(curl);
+		error = "cannot create " + tmpPath;
+		return false;
+	}
+	WriteCtx ctx;
+	ctx.file = f;
+	ctx.progress = &progress;
+
+	char errbuf[CURL_ERROR_SIZE]{};
+	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+	curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &ctx);
+	curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progressCallback);
+	curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &ctx);
+	curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 8L);
+	// Redirects must stay on HTTPS: a model must never be fetched over plain HTTP.
+	curl_easy_setopt(curl, CURLOPT_REDIR_PROTOCOLS_STR, "https");
+	curl_easy_setopt(curl, CURLOPT_PROTOCOLS_STR, "https");
+	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
+	curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 15L);
+	curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 1L);
+	curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, 60L);
+	curl_easy_setopt(curl, CURLOPT_USERAGENT, "ProMatte/1.0 (OBS Studio plugin)");
+	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
+
+	const CURLcode rc = curl_easy_perform(curl);
+	long status = 0;
+	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+	std::fclose(f);
+
+	bool ok = rc == CURLE_OK;
+	if (!ok) {
+		if (ctx.cancelled)
+			error = "cancelled";
+		else if (ctx.writeFailed)
+			error = "disk write failed";
+		else
+			error = errbuf[0] ? errbuf : curl_easy_strerror(rc);
+	} else if (status != 200) {
+		error = "HTTP status " + std::to_string(status);
+		ok = false;
+	} else if (ctx.total != 0 && ctx.received != ctx.total) {
+		error = "incomplete download";
+		ok = false;
+	}
+	curl_easy_cleanup(curl);
+
+	if (!ok) {
+		fs::removeFile(tmpPath);
+		return false;
+	}
+	fs::removeFile(destPath);
+	if (!fs::renameFile(tmpPath, destPath)) {
+		error = "cannot move downloaded file into place";
+		fs::removeFile(tmpPath);
+		return false;
+	}
+	return true;
 }
 
 #endif

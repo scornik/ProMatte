@@ -47,13 +47,19 @@ target_link_libraries(promatte-core PUBLIC promatte::onnxruntime promatte::json)
 target_compile_definitions(promatte-core PUBLIC
     PROMATTE_VERSION="${PROJECT_VERSION}"
     $<$<BOOL:${PROMATTE_ENABLE_DIRECTML}>:PROMATTE_HAVE_DIRECTML=1>
-    NOMINMAX WIN32_LEAN_AND_MEAN)
+    $<$<BOOL:${WIN32}>:NOMINMAX>
+    $<$<BOOL:${WIN32}>:WIN32_LEAN_AND_MEAN>)
 promatte_set_warnings(promatte-core)
 if(WIN32)
     target_link_libraries(promatte-core PUBLIC dxgi d3d12 winhttp)
     if(DIRECTML_INCLUDE_DIR)
         target_include_directories(promatte-core PUBLIC "${DIRECTML_INCLUDE_DIR}")
     endif()
+else()
+    # Model downloads use libcurl outside Windows; threads are needed explicitly
+    # for the inference worker on Linux.
+    find_package(Threads REQUIRED)
+    target_link_libraries(promatte-core PUBLIC CURL::libcurl Threads::Threads)
 endif()
 
 # ---------------------------------------------------------------------------
@@ -75,8 +81,12 @@ target_compile_definitions(promatte PRIVATE PROMATTE_MODULE_NAME="promatte")
 promatte_set_warnings(promatte)
 set_target_properties(promatte PROPERTIES PREFIX "" OUTPUT_NAME "promatte")
 
-# Stage a ready-to-install plugin tree in build/stage/ (obs-plugins/64bit + data)
-promatte_stage_plugin(promatte)
+if(WIN32)
+    # Stage a ready-to-install plugin tree in build/stage/ (obs-plugins/64bit + data)
+    promatte_stage_plugin(promatte)
+else()
+    promatte_install_plugin(promatte)
+endif()
 endif()
 
 # ---------------------------------------------------------------------------
@@ -89,3 +99,6 @@ if(PROMATTE_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
 endif()
+
+# Linux .deb/.tar.gz and macOS .pkg. Windows uses installer/ProMatte.iss instead.
+include(ProMattePackaging)

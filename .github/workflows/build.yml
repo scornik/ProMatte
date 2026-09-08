@@ -1,0 +1,150 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  ORT_VERSION: "1.24.4"
+  OBS_VERSION: "31.1.1"
+
+jobs:
+  # The bundled models are converted from TFLite/Paddle and are not committed,
+  # so build them once and share them with every platform job.
+  models:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Cache converted models
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: models/converted
+          key: models-${{ hashFiles('tools/models/convert_models.py', 'tools/models/fix_mediapipe_ops.py', 'tools/models/fix_pphumanseg.py') }}
+      - name: Convert models
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r tools/models/requirements.txt
+          python tools/models/convert_models.py
+          python tools/models/fix_pphumanseg.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: models
+          path: models/converted
+          retention-days: 1
+
+  linux:
+    needs: models
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: models
+          path: models/converted
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config \
+            libobs-dev libcurl4-openssl-dev nlohmann-json3-dev file
+      - name: Fetch ONNX Runtime
+        run: |
+          curl -fsSL -O https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-x64-${ORT_VERSION}.tgz
+          tar xzf onnxruntime-linux-x64-${ORT_VERSION}.tgz
+          echo "ORT_ROOT=$PWD/onnxruntime-linux-x64-${ORT_VERSION}" >> "$GITHUB_ENV"
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DPROMATTE_ORT_ROOT="$ORT_ROOT"
+      - name: Build
+        run: cmake --build build --parallel
+      - name: Unit tests
+        run: LD_LIBRARY_PATH="$ORT_ROOT/lib" ./build/bin/promatte-unit-tests
+      - name: Package
+        run: cd build && cpack
+      - name: Verify the package installs and the module loads
+        run: |
+          sudo dpkg -i build/promatte_*.deb
+          dpkg -L promatte | head -20
+          ldd /usr/lib/obs-plugins/promatte.so | grep -E "not found" && exit 1
+          cat > /tmp/loadtest.c <<'EOF'
+          #include <dlfcn.h>
+          #include <stdio.h>
+          int main(void) {
+              void *h = dlopen("/usr/lib/obs-plugins/promatte.so", RTLD_NOW);
+              if (!h) { printf("dlopen FAILED: %s\n", dlerror()); return 1; }
+              return dlsym(h, "obs_module_load") ? 0 : 2;
+          }
+          EOF
+          gcc /tmp/loadtest.c -o /tmp/loadtest -ldl && /tmp/loadtest && echo "module loads"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: promatte-linux-x86_64
+          path: |
+            build/*.deb
+            build/*.tar.gz
+
+  macos:
+    needs: models
+    runs-on: macos-14 # Apple Silicon
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: models
+          path: models/converted
+      - name: Install build dependencies
+        run: brew install cmake ninja nlohmann-json
+      - name: Fetch ONNX Runtime
+        run: |
+          curl -fsSL -O https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-osx-arm64-${ORT_VERSION}.tgz
+          tar xzf onnxruntime-osx-arm64-${ORT_VERSION}.tgz
+          echo "ORT_ROOT=$PWD/onnxruntime-osx-arm64-${ORT_VERSION}" >> "$GITHUB_ENV"
+      - name: Cache libobs
+        id: obscache
+        uses: actions/cache@v4
+        with:
+          path: obs-sdk
+          key: libobs-${{ env.OBS_VERSION }}-macos-arm64-v2
+      - name: Build libobs
+        if: steps.obscache.outputs.cache-hit != 'true'
+        run: |
+          # No Homebrew formula ships libobs headers, so build the library only:
+          # no plugins, no frontend, which keeps this to a few minutes.
+          curl -fsSL -o obs.tar.gz https://github.com/obsproject/obs-studio/archive/refs/tags/${OBS_VERSION}.tar.gz
+          tar xzf obs.tar.gz
+          curl -fsSL -o deps.tar.xz https://github.com/obsproject/obs-deps/releases/download/2025-07-11/macos-deps-2025-07-11-arm64.tar.xz
+          mkdir -p obs-deps && tar xf deps.tar.xz -C obs-deps
+          cmake -S obs-studio-${OBS_VERSION} -B obs-build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$PWD/obs-deps" \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 \
+            -DOBS_CMAKE_VERSION=3.0.0 \
+            -DENABLE_PLUGINS=OFF -DENABLE_FRONTEND=OFF -DENABLE_UI=OFF \
+            -DENABLE_SCRIPTING=OFF -DOBS_VERSION_OVERRIDE=${OBS_VERSION}
+          cmake --build obs-build --parallel --target libobs
+          cmake --install obs-build --component Development --prefix "$PWD/obs-sdk"
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DPROMATTE_ORT_ROOT="$ORT_ROOT" \
+            -DCMAKE_PREFIX_PATH="$PWD/obs-sdk;$PWD/obs-deps" \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
+      - name: Build
+        run: cmake --build build --parallel
+      - name: Unit tests
+        run: DYLD_LIBRARY_PATH="$ORT_ROOT/lib" ./build/bin/promatte-unit-tests
+      - name: Package
+        run: cd build && cpack
+      - name: Show the bundle layout
+        run: |
+          find build/promatte.plugin -maxdepth 3 | head -30
+          otool -L build/promatte.plugin/Contents/MacOS/promatte | head
+      - uses: actions/upload-artifact@v4
+        with:
+          name: promatte-macos-arm64
+          path: build/*.pkg

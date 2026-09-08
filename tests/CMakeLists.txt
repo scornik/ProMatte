@@ -16,14 +16,23 @@ target_compile_definitions(promatte-unit-tests PRIVATE
     PROMATTE_MODELS_DIR="${CMAKE_SOURCE_DIR}/models/converted")
 promatte_set_warnings(promatte-unit-tests)
 set_target_properties(promatte-unit-tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-add_custom_command(TARGET promatte-unit-tests POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PROMATTE_RUNTIME_DLLS} "$<TARGET_FILE_DIR:promatte-unit-tests>"
-    COMMAND_EXPAND_LISTS)
+# Windows needs onnxruntime/DirectML beside the executable; elsewhere the
+# loader finds them through rpath, and the list is empty.
+if(PROMATTE_RUNTIME_DLLS)
+    add_custom_command(TARGET promatte-unit-tests POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PROMATTE_RUNTIME_DLLS} "$<TARGET_FILE_DIR:promatte-unit-tests>"
+        COMMAND_EXPAND_LISTS)
+endif()
 add_test(NAME unit COMMAND promatte-unit-tests)
 
-if(PROMATTE_BUILD_PLUGIN)
 # Integration harness: boots libobs headlessly, loads the plugin module, creates
 # the filter on a synthetic source and renders frames.
+#
+# Windows only for now: it drives the D3D11 renderer and loads libobs from the
+# SDK built by tools/setup-deps.ps1. On Linux and macOS libobs needs a real
+# display and GPU context, which CI runners do not have, so those platforms run
+# the unit suite and leave rendering to the live checks in tests/integration/.
+if(PROMATTE_BUILD_PLUGIN AND WIN32)
 add_executable(promatte-integration-tests
     integration/obs_harness.cpp
 )

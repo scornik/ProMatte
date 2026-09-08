@@ -1,0 +1,206 @@
+[
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/promatte-core.dir/src/utils/logging.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/utils/logging.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/utils/logging.cpp",
+  "output": "CMakeFiles/promatte-core.dir/src/utils/logging.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/promatte-core.dir/src/utils/sha256.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/utils/sha256.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/utils/sha256.cpp",
+  "output": "CMakeFiles/promatte-core.dir/src/utils/sha256.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/promatte-core.dir/src/utils/file_utils.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/utils/file_utils.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/utils/file_utils.cpp",
+  "output": "CMakeFiles/promatte-core.dir/src/utils/file_utils.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/promatte-core.dir/src/utils/system_info.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/utils/system_info.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/utils/system_info.cpp",
+  "output": "CMakeFiles/promatte-core.dir/src/utils/system_info.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/promatte-core.dir/src/inference/model_descriptor.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/inference/model_descriptor.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/inference/model_descriptor.cpp",
+  "output": "CMakeFiles/promatte-core.dir/src/inference/model_descriptor.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/promatte-core.dir/src/inference/backend_registry.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/inference/backend_registry.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/inference/backend_registry.cpp",
+  "output": "CMakeFiles/promatte-core.dir/src/inference/backend_registry.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/promatte-core.dir/src/inference/inference_worker.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/inference/inference_worker.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/inference/inference_worker.cpp",
+  "output": "CMakeFiles/promatte-core.dir/src/inference/inference_worker.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/promatte-core.dir/src/backends/onnxruntime_backend.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/backends/onnxruntime_backend.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/backends/onnxruntime_backend.cpp",
+  "output": "CMakeFiles/promatte-core.dir/src/backends/onnxruntime_backend.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/promatte-core.dir/src/preprocessing/preprocess.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/preprocessing/preprocess.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/preprocessing/preprocess.cpp",
+  "output": "CMakeFiles/promatte-core.dir/src/preprocessing/preprocess.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/promatte-core.dir/src/postprocessing/matte_refine.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/postprocessing/matte_refine.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/postprocessing/matte_refine.cpp",
+  "output": "CMakeFiles/promatte-core.dir/src/postprocessing/matte_refine.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/promatte-core.dir/src/temporal/temporal_stabilizer.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/temporal/temporal_stabilizer.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/temporal/temporal_stabilizer.cpp",
+  "output": "CMakeFiles/promatte-core.dir/src/temporal/temporal_stabilizer.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/promatte-core.dir/src/performance/performance_controller.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/performance/performance_controller.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/performance/performance_controller.cpp",
+  "output": "CMakeFiles/promatte-core.dir/src/performance/performance_controller.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/promatte-core.dir/src/performance/capability_store.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/performance/capability_store.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/performance/capability_store.cpp",
+  "output": "CMakeFiles/promatte-core.dir/src/performance/capability_store.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/promatte-core.dir/src/models/model_manager.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/models/model_manager.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/models/model_manager.cpp",
+  "output": "CMakeFiles/promatte-core.dir/src/models/model_manager.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/promatte-core.dir/src/models/model_downloader.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/models/model_downloader.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/models/model_downloader.cpp",
+  "output": "CMakeFiles/promatte-core.dir/src/models/model_downloader.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_MODULE_NAME=\\\"promatte\\\" -DPROMATTE_VERSION=\\\"1.0.0\\\" -Dpromatte_EXPORTS -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -isystem /usr/include/obs -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -DHAVE_OBSCONFIG_H -mmmx -msse -msse2 -o CMakeFiles/promatte.dir/src/plugin/plugin-main.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/plugin/plugin-main.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/plugin/plugin-main.cpp",
+  "output": "CMakeFiles/promatte.dir/src/plugin/plugin-main.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_MODULE_NAME=\\\"promatte\\\" -DPROMATTE_VERSION=\\\"1.0.0\\\" -Dpromatte_EXPORTS -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -isystem /usr/include/obs -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -DHAVE_OBSCONFIG_H -mmmx -msse -msse2 -o CMakeFiles/promatte.dir/src/obs/filter.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/obs/filter.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/obs/filter.cpp",
+  "output": "CMakeFiles/promatte.dir/src/obs/filter.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_MODULE_NAME=\\\"promatte\\\" -DPROMATTE_VERSION=\\\"1.0.0\\\" -Dpromatte_EXPORTS -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -isystem /usr/include/obs -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -DHAVE_OBSCONFIG_H -mmmx -msse -msse2 -o CMakeFiles/promatte.dir/src/obs/settings.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/obs/settings.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/obs/settings.cpp",
+  "output": "CMakeFiles/promatte.dir/src/obs/settings.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_MODULE_NAME=\\\"promatte\\\" -DPROMATTE_VERSION=\\\"1.0.0\\\" -Dpromatte_EXPORTS -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -isystem /usr/include/obs -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -DHAVE_OBSCONFIG_H -mmmx -msse -msse2 -o CMakeFiles/promatte.dir/src/obs/presets.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/obs/presets.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/obs/presets.cpp",
+  "output": "CMakeFiles/promatte.dir/src/obs/presets.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_MODULE_NAME=\\\"promatte\\\" -DPROMATTE_VERSION=\\\"1.0.0\\\" -Dpromatte_EXPORTS -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -isystem /usr/include/obs -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -DHAVE_OBSCONFIG_H -mmmx -msse -msse2 -o CMakeFiles/promatte.dir/src/obs/background_source.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/obs/background_source.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/obs/background_source.cpp",
+  "output": "CMakeFiles/promatte.dir/src/obs/background_source.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_MODULE_NAME=\\\"promatte\\\" -DPROMATTE_VERSION=\\\"1.0.0\\\" -Dpromatte_EXPORTS -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -isystem /usr/include/obs -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -DHAVE_OBSCONFIG_H -mmmx -msse -msse2 -o CMakeFiles/promatte.dir/src/ui/properties.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/ui/properties.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/ui/properties.cpp",
+  "output": "CMakeFiles/promatte.dir/src/ui/properties.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_MODULE_NAME=\\\"promatte\\\" -DPROMATTE_VERSION=\\\"1.0.0\\\" -Dpromatte_EXPORTS -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -isystem /usr/include/obs -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -DHAVE_OBSCONFIG_H -mmmx -msse -msse2 -o CMakeFiles/promatte.dir/src/rendering/gpu_pipeline.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/rendering/gpu_pipeline.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/rendering/gpu_pipeline.cpp",
+  "output": "CMakeFiles/promatte.dir/src/rendering/gpu_pipeline.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_MODULE_NAME=\\\"promatte\\\" -DPROMATTE_VERSION=\\\"1.0.0\\\" -Dpromatte_EXPORTS -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -isystem /usr/include/obs -O3 -DNDEBUG -std=c++20 -fPIC -Wall -Wextra -Wpedantic -DHAVE_OBSCONFIG_H -mmmx -msse -msse2 -o CMakeFiles/promatte.dir/src/rendering/debug_overlay.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/rendering/debug_overlay.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src/rendering/debug_overlay.cpp",
+  "output": "CMakeFiles/promatte.dir/src/rendering/debug_overlay.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIE -Wall -Wextra -Wpedantic -o tools/benchmark/CMakeFiles/promatte-bench.dir/main.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tools/benchmark/main.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tools/benchmark/main.cpp",
+  "output": "tools/benchmark/CMakeFiles/promatte-bench.dir/main.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIE -Wall -Wextra -Wpedantic -o tools/benchmark/CMakeFiles/promatte-bench.dir/image_io.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tools/benchmark/image_io.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tools/benchmark/image_io.cpp",
+  "output": "tools/benchmark/CMakeFiles/promatte-bench.dir/image_io.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_MODELS_DIR=\"\\\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/models/converted\\\"\" -DPROMATTE_SOURCE_DIR=\"\\\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover\\\"\" -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/third_party\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIE -Wall -Wextra -Wpedantic -o tests/CMakeFiles/promatte-unit-tests.dir/unit/main.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/unit/main.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/unit/main.cpp",
+  "output": "tests/CMakeFiles/promatte-unit-tests.dir/unit/main.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_MODELS_DIR=\"\\\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/models/converted\\\"\" -DPROMATTE_SOURCE_DIR=\"\\\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover\\\"\" -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/third_party\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIE -Wall -Wextra -Wpedantic -o tests/CMakeFiles/promatte-unit-tests.dir/unit/test_matte_refine.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/unit/test_matte_refine.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/unit/test_matte_refine.cpp",
+  "output": "tests/CMakeFiles/promatte-unit-tests.dir/unit/test_matte_refine.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_MODELS_DIR=\"\\\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/models/converted\\\"\" -DPROMATTE_SOURCE_DIR=\"\\\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover\\\"\" -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/third_party\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIE -Wall -Wextra -Wpedantic -o tests/CMakeFiles/promatte-unit-tests.dir/unit/test_temporal.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/unit/test_temporal.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/unit/test_temporal.cpp",
+  "output": "tests/CMakeFiles/promatte-unit-tests.dir/unit/test_temporal.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_MODELS_DIR=\"\\\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/models/converted\\\"\" -DPROMATTE_SOURCE_DIR=\"\\\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover\\\"\" -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/third_party\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIE -Wall -Wextra -Wpedantic -o tests/CMakeFiles/promatte-unit-tests.dir/unit/test_preprocess.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/unit/test_preprocess.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/unit/test_preprocess.cpp",
+  "output": "tests/CMakeFiles/promatte-unit-tests.dir/unit/test_preprocess.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_MODELS_DIR=\"\\\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/models/converted\\\"\" -DPROMATTE_SOURCE_DIR=\"\\\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover\\\"\" -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/third_party\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIE -Wall -Wextra -Wpedantic -o tests/CMakeFiles/promatte-unit-tests.dir/unit/test_model_descriptor.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/unit/test_model_descriptor.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/unit/test_model_descriptor.cpp",
+  "output": "tests/CMakeFiles/promatte-unit-tests.dir/unit/test_model_descriptor.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_MODELS_DIR=\"\\\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/models/converted\\\"\" -DPROMATTE_SOURCE_DIR=\"\\\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover\\\"\" -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/third_party\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIE -Wall -Wextra -Wpedantic -o tests/CMakeFiles/promatte-unit-tests.dir/unit/test_model_manager.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/unit/test_model_manager.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/unit/test_model_manager.cpp",
+  "output": "tests/CMakeFiles/promatte-unit-tests.dir/unit/test_model_manager.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_MODELS_DIR=\"\\\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/models/converted\\\"\" -DPROMATTE_SOURCE_DIR=\"\\\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover\\\"\" -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/third_party\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIE -Wall -Wextra -Wpedantic -o tests/CMakeFiles/promatte-unit-tests.dir/unit/test_performance_controller.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/unit/test_performance_controller.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/unit/test_performance_controller.cpp",
+  "output": "tests/CMakeFiles/promatte-unit-tests.dir/unit/test_performance_controller.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_MODELS_DIR=\"\\\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/models/converted\\\"\" -DPROMATTE_SOURCE_DIR=\"\\\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover\\\"\" -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/third_party\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIE -Wall -Wextra -Wpedantic -o tests/CMakeFiles/promatte-unit-tests.dir/unit/test_inference_worker.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/unit/test_inference_worker.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/unit/test_inference_worker.cpp",
+  "output": "tests/CMakeFiles/promatte-unit-tests.dir/unit/test_inference_worker.cpp.o"
+},
+{
+  "directory": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/build-linux",
+  "command": "/usr/bin/c++ -DPROMATTE_MODELS_DIR=\"\\\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/models/converted\\\"\" -DPROMATTE_SOURCE_DIR=\"\\\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover\\\"\" -DPROMATTE_VERSION=\\\"1.0.0\\\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/third_party\" -I\"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/src\" -isystem /opt/ort/onnxruntime-linux-x64-1.24.4/include -O3 -DNDEBUG -std=c++20 -fPIE -Wall -Wextra -Wpedantic -o tests/CMakeFiles/promatte-unit-tests.dir/unit/test_sha256.cpp.o -c \"/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/unit/test_sha256.cpp\"",
+  "file": "/mnt/d/Hakeemify/Customer Analysis/OBS Plugin/Background Remover/tests/unit/test_sha256.cpp",
+  "output": "tests/CMakeFiles/promatte-unit-tests.dir/unit/test_sha256.cpp.o"
+}
+]
