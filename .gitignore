@@ -34,3 +34,4 @@ tests/visual/assets/*.jpg
 
 # Runtime state written by headless test runs (obs_module_config_path is relative there)
 promatte/
+dist/
