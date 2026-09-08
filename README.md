@@ -69,21 +69,26 @@ because no distribution packages it, and the module's `RUNPATH` points there.
 
 ### Installing on macOS
 
-Unpack the archive and move the bundle into your plugins directory:
+Works on both Intel and Apple Silicon; the bundle is a universal binary.
 
 ```bash
+# 1. unpack (the archive contains a versioned folder)
 unzip ProMatte-1.0.1-macos-universal.zip
+
+# 2. install for the current user
 mkdir -p ~/Library/Application\ Support/obs-studio/plugins
-mv promatte.plugin ~/Library/Application\ Support/obs-studio/plugins/
+mv ProMatte-1.0.1-macos-universal/promatte.plugin "$HOME/Library/Application Support/obs-studio/plugins/"
+
+# 3. the bundle is unsigned, so clear the quarantine flag Gatekeeper sets
+xattr -dr com.apple.quarantine "$HOME/Library/Application Support/obs-studio/plugins/promatte.plugin"
 ```
 
-The bundle carries its own ONNX Runtime in `Contents/Frameworks`, so there is
-nothing else to install. It is unsigned and unnotarised, so Gatekeeper will
-quarantine it; clear that with:
+Restart OBS, then add the filter to your camera. The bundle carries its own ONNX
+Runtime in `Contents/Frameworks`, so there is nothing else to install.
 
-```bash
-xattr -dr com.apple.quarantine ~/Library/Application\ Support/obs-studio/plugins/promatte.plugin
-```
+If the filter does not appear, open **Help → Log Files → View Current Log** and
+search for `promatte`: the module logs its version and the backends it found as
+soon as OBS loads it.
 
 ## Building from source
 
