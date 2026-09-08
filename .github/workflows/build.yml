@@ -70,7 +70,11 @@ jobs:
         run: |
           sudo dpkg -i build/promatte_*.deb
           dpkg -L promatte | head -20
-          ldd /usr/lib/obs-plugins/promatte.so | grep -E "not found" && exit 1
+          # grep exits non-zero when it finds nothing, which is the good case here,
+          # so test for the presence of unresolved libraries rather than chaining.
+          if ldd /usr/lib/obs-plugins/promatte.so | grep -F "not found"; then
+            echo "unresolved shared libraries"; exit 1
+          fi
           cat > /tmp/loadtest.c <<'EOF'
           #include <dlfcn.h>
           #include <stdio.h>
