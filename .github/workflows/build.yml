@@ -94,7 +94,9 @@ jobs:
 
   macos:
     needs: models
-    runs-on: macos-14 # Apple Silicon
+    # macos-15 for the macOS 15 SDK (Xcode 16), which OBS 31 requires;
+    # the macos-14 image ships SDK 14.5 and libobs refuses to configure.
+    runs-on: macos-15 # Apple Silicon
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -113,7 +115,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: obs-sdk
-          key: libobs-${{ env.OBS_VERSION }}-macos-arm64-v2
+          key: libobs-${{ env.OBS_VERSION }}-macos15-arm64-v3
       - name: Build libobs
         if: steps.obscache.outputs.cache-hit != 'true'
         run: |
