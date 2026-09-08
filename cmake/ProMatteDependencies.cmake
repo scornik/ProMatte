@@ -15,14 +15,16 @@ endif()
 # --- libobs -----------------------------------------------------------------
 if(PROMATTE_BUILD_PLUGIN)
     # The SDK in .deps is produced by tools/setup-deps.ps1 and is Windows-only:
-    # picking it up elsewhere pulls in w32-pthreads and fails to generate.
+    # picking it up elsewhere pulls in w32-pthreads and fails to generate. Only
+    # the search path is gated, not find_package itself, because macOS also
+    # builds libobs from source and passes its location in CMAKE_PREFIX_PATH.
     if(WIN32)
         set(_obs_sdk "${PROMATTE_DEPS_DIR}/obs-sdk")
         if(EXISTS "${_obs_sdk}/cmake/libobsConfig.cmake")
             list(APPEND CMAKE_PREFIX_PATH "${_obs_sdk}" "${_obs_sdk}/cmake")
         endif()
-        find_package(libobs QUIET)
     endif()
+    find_package(libobs QUIET)
     if(NOT TARGET OBS::libobs)
         find_package(PkgConfig QUIET)
         if(PKG_CONFIG_FOUND)

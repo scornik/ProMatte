@@ -149,8 +149,11 @@ jobs:
           cmake --install obs-build --config Release --component Development --prefix "$PWD/obs-sdk"
       - name: Configure
         run: |
+          # libobs installs as a framework, so point at its config directory
+          # directly rather than relying on framework search heuristics.
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
             -DPROMATTE_ORT_ROOT="$ORT_ROOT" \
+            -Dlibobs_DIR="$PWD/obs-sdk/Frameworks/libobs.framework/Resources/cmake" \
             -DCMAKE_PREFIX_PATH="$PWD/obs-sdk;$PWD/obs-deps" \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
       - name: Build
