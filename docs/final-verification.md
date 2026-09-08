@@ -29,8 +29,8 @@ Artefacts:
 
 | File | Size | SHA-256 |
 | ---- | ---- | ------- |
-| `installer/output/ProMatte-Setup-1.0.0.exe` | 45.3 MB | `052d4b1a099056707c50cee86fc00f4ec7353b8ef8d94026715b26e08c460c64` |
-| `build/stage/obs-plugins/64bit/promatte.dll` | 434 KB | staged with `promatte.pdb` |
+| `installer/output/ProMatte-Setup-1.0.0.exe` | 43.2 MB | `33b5c40b915c37912ab1ba3b0fd343f5a1b2cd97db95bf4e8d815db79f60e758` |
+| `build/stage/obs-plugins/64bit/promatte.dll` | 434 KB | `87a554ab82fc6bba059e3011d444e9245ca1ad74f4857598b3bf8308eb8404e4` (staged with `promatte.pdb`) |
 
 The installer carries the plugin, ONNX Runtime, DirectML, the four effects, the
 locale file, the model manifest and the five bundled models.
@@ -70,7 +70,7 @@ controller (tier mapping, hysteresis, ceiling relaxation, statistics), the
 inference worker lifecycle (no model, missing file, real model, flooding,
 disable, backend release) and SHA-256 against FIPS vectors.
 
-### 3.2 Integration tests — 9 cases / 68 assertions, all pass
+### 3.2 Integration tests — 10 cases / 76 assertions, all pass
 
 `build\bin\Release\promatte-integration-tests.exe` boots libobs with the D3D11
 renderer, loads the built module and drives a synthetic animated source:
@@ -85,7 +85,8 @@ renderer, loads the built module and drives a synthetic animated source:
 | backend and quality switching while rendering, unknown model id | pass |
 | rapid create/destroy ×8, including destroying while the model is still loading | pass |
 | render-cost budget (filter render time stays inside the frame budget) | pass |
-| memory bounded over a 30 s render run | pass — RSS 524.6 → 504.7 MB, process VRAM 214.4 → 119.8 MB (both fell) |
+| transparent output is composited by OBS rather than painted over the background | pass — 47.5 % of the frame transparent, 50.7 % of pixels take the colour of what is behind the source |
+| memory bounded over a 30 s render run | pass — RSS 540.7 → 521.2 MB, process VRAM 222.2 → 159.2 MB (both fell) |
 
 ### 3.3 Live OBS session — 37 steps, 0 errors, 0 warnings
 
@@ -115,7 +116,7 @@ The live test also asserts that the filter actually changes pixels
 | Run | Duration | Result |
 | --- | -------- | ------ |
 | Live OBS soak (webcam, blur mode, Auto) | 15 min, 30 samples | render FPS 27.1 min / 30.0 median / 30.0 max; OBS process memory **726 → 498 MB** (fell, no growth); CPU 37 % median; 221 skipped render frames accumulated out of 35 202 total (0.6 %), none in the last 6 minutes |
-| Headless libobs memory check | 30 s | RSS 524.6 → 504.7 MB and process VRAM 214.4 → 119.8 MB, both well inside the 64 MB growth bound the test asserts |
+| Headless libobs memory check | 30 s | RSS 540.7 → 521.2 MB and process VRAM 222.2 → 159.2 MB, both well inside the 64 MB growth bound the test asserts |
 | Benchmark loops | 56 × (8 warm-up + 48 frames) per model/backend/tier | no growth across runs; VRAM returns to baseline after each session is destroyed |
 
 A 2-hour and an 8-hour soak were **not** run — see §8.
@@ -202,7 +203,7 @@ in `build/bench-dump/`.
 | Aspect | Result |
 | ------ | ------ |
 | Overall composite | Blur mode is clean and convincing: the subject is sharp, the room is smoothly blurred, no visible halo (`21_mode_blur.png`) |
-| Transparent output | Real straight alpha: 65.5 % of pixels fully transparent, 27.3 % fully opaque, the remainder a soft transition band — verified by reading the alpha channel of the PNG, not by eye |
+| Transparent output | Real straight alpha: 65.5 % of pixels fully transparent, 27.3 % fully opaque, the remainder a soft transition band — verified by reading the alpha channel of the PNG, not by eye. Compositing over what is behind the source is covered by its own regression test (§3.2) after the defect in §10 |
 | Matte shape | Clean single silhouette, head/shoulders/arms correct, no stray blobs (`25_debug_matte.png`) |
 | Hair | Good silhouette with the fast models but the strand detail is limited by their 256×144 output; RVM at the Performance tier keeps individual strands (see `build/bench-dump/rvm_mobilenetv3_*_composite.png` vs the MediaPipe dumps) |
 | Glasses | Preserved, including the lenses and the frame, in every mode |
@@ -282,11 +283,20 @@ Product limitations:
 10. **Video backgrounds** rely on OBS' Media Source; formats OBS cannot decode
     will not play, and the media source adds its own decode cost.
 
-## 9. Conclusion
+## 9. Defects found and fixed during verification
+
+| Defect | How it showed | Fix | Regression test |
+| ------ | ------------- | --- | --------------- |
+| Effect parameters discarded between passes | libobs clears every effect parameter at `gs_technique_end`, so parameters assigned before `gs_effect_loop` were lost for every pass after the first; the blur and refinement passes ran with stale uniforms | `drawEffect` takes a callback that assigns parameters immediately before the loop that consumes them | covered indirectly by the matte-follows-model test |
+| **Transparent mode never revealed anything** | The final composite pass called `gs_enable_blending(false)`, overriding the blend state of the caller. The alpha channel was correct, but the *background* pixels' colour was written straight over whatever was behind the source, so "Remove (transparent)" looked like it did nothing in a scene and in the filter preview | draw with the caller's blend state, exactly like the stock OBS chroma-key and colour-key filters | "transparent output is composited by OBS, not painted over the background": composites over two different background colours and requires the result to differ. With the defect reintroduced it reports 0.0 % differing pixels and fails; with the fix, 50.7 % |
+| Duplicate install shadowed updates | With ProMatte present both in the OBS folder and in `%ProgramData%\obs-studio\plugins`, OBS loaded both, logged `Source 'promatte_filter' already exists!` and kept the copy that loaded first, so an updated build silently never ran | the module now detects an existing registration and logs `ANOTHER COPY OF PROMATTE IS ALREADY LOADED`, naming the ignored file; the installer deletes the ProgramData copy | n/a (environment defect; documented in troubleshooting) |
+
+## 10. Conclusion
 
 The plugin builds warning-free, loads in OBS Studio 32.2.2, and does what it
 claims: real, local, GPU- or CPU-accelerated background removal with
 professional edge treatment, adaptive quality and no cloud dependency. All
-eight acceptance criteria pass on the available hardware. The gaps above are
+eight acceptance criteria pass on the available hardware. The gaps in §8 are
 verification coverage gaps (other hardware, other platforms, longer soaks), not
-known defects.
+known defects; the three defects found along the way are in §9, each with the
+change that fixed it and, where it can be tested, the test that now guards it.

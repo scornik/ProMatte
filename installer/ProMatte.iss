@@ -49,6 +49,13 @@ Source: "{#StageDir}\data\obs-plugins\promatte\*"; DestDir: "{app}\data\obs-plug
 Source: "..\LICENSE"; DestDir: "{app}\data\obs-plugins\promatte"; DestName: "LICENSE.txt"; Flags: ignoreversion
 Source: "..\THIRD_PARTY_LICENSES.md"; DestDir: "{app}\data\obs-plugins\promatte"; Flags: ignoreversion
 
+[InstallDelete]
+; A copy under %ProgramData%\obs-studio\plugins (left by a manual install or by
+; a developer deploy) loads alongside this one; OBS then rejects the second
+; registration and silently keeps whichever loaded first, so the install appears
+; to do nothing. Remove it so exactly one copy remains.
+Type: filesandordirs; Name: "{commonappdata}\obs-studio\plugins\promatte"
+
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}\data\obs-plugins\promatte"
 

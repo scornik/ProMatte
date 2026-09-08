@@ -4,6 +4,45 @@ Start with **Filters → ProMatte → Performance → Refresh statistics**: the
 status text names the backend, model, AI resolution and any error. The OBS log
 (`Help → Log Files`) contains every ProMatte message prefixed with `[promatte]`.
 
+## "Remove (transparent)" looks like it does nothing
+
+Transparent is not a preview mode — it makes the background *see-through*, and
+you only notice that when there is something behind the camera to see. On its
+own, in a scene with nothing underneath it, the removed area shows the canvas
+(black) or, in the filter properties dialog, the dialog's own background.
+
+**If you just want the person on their own, pick the mode that draws something
+in place of the background:**
+
+| You want | Choose |
+| -------- | ------ |
+| Person over a colour | **Replace with solid color** |
+| Person over a photo | **Replace with image** |
+| Person over your game, slides, or another source | **Remove (transparent)**, then put that source *below* the camera in the scene |
+| Keep the room but push it back | **Blur** or **Dim** |
+
+Blur is the quickest way to confirm the AI is working at all, because the effect
+is visible with nothing else in the scene.
+
+To check the matte itself, set *Advanced → Debug view → Show matte*: you should
+see a white silhouette of yourself on black.
+
+## Two copies of the plugin installed
+
+If an update seems to change nothing, look in the OBS log for:
+
+```
+obs_register_source: Source 'promatte_filter' already exists!  Duplicate library?
+```
+
+That means ProMatte exists both inside the OBS folder
+(`obs-plugins\64bit`) and in `%ProgramData%\obs-studio\plugins\promatte`. OBS
+loads both, rejects the second registration and keeps whichever loaded first —
+usually the older one — so your update never runs. ProMatte also logs this
+itself as `ANOTHER COPY OF PROMATTE IS ALREADY LOADED`, naming the file being
+ignored. Delete one of the two copies; the installer removes the ProgramData
+copy for you.
+
 ## The filter does nothing (video looks unchanged)
 
 * **"No AI model installed"** in the status: the bundled models are missing

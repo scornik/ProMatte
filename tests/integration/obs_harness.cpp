@@ -439,6 +439,46 @@ bool captureSource(obs_source_t *src, uint32_t w, uint32_t h, std::vector<uint8_
 	return ok;
 }
 
+// Composites one source over a solid background using the same blend state the
+// OBS scene compositor uses, so tests see what a viewer would actually see
+// rather than the raw RGBA the filter writes.
+bool captureOverBackground(obs_source_t *src, uint32_t w, uint32_t h, float r, float g, float b,
+			   std::vector<uint8_t> &bgra)
+{
+	bool ok = false;
+	obs_enter_graphics();
+	gs_texrender_t *tr = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
+	gs_stagesurf_t *stage = gs_stagesurface_create(w, h, GS_RGBA);
+	if (tr && stage && gs_texrender_begin(tr, w, h)) {
+		struct vec4 clear;
+		vec4_set(&clear, r, g, b, 1.0f);
+		gs_clear(GS_CLEAR_COLOR, &clear, 0.0f, 0);
+		gs_ortho(0.0f, float(w), 0.0f, float(h), -100.0f, 100.0f);
+		gs_blend_state_push();
+		gs_blend_function_separate(GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA, GS_BLEND_ONE,
+					   GS_BLEND_INVSRCALPHA);
+		obs_source_video_render(src);
+		gs_blend_state_pop();
+		gs_texrender_end(tr);
+		gs_stage_texture(stage, gs_texrender_get_texture(tr));
+		uint8_t *data = nullptr;
+		uint32_t linesize = 0;
+		if (gs_stagesurface_map(stage, &data, &linesize)) {
+			bgra.resize(size_t(w) * h * 4);
+			for (uint32_t y = 0; y < h; ++y)
+				std::memcpy(bgra.data() + size_t(y) * w * 4, data + size_t(y) * linesize, size_t(w) * 4);
+			gs_stagesurface_unmap(stage);
+			ok = true;
+		}
+	}
+	if (stage)
+		gs_stagesurface_destroy(stage);
+	if (tr)
+		gs_texrender_destroy(tr);
+	obs_leave_graphics();
+	return ok;
+}
+
 std::vector<double> luma(const std::vector<uint8_t> &rgba)
 {
 	std::vector<double> out(rgba.size() / 4);
@@ -532,6 +572,51 @@ TEST_CASE("the refined matte follows the model matte, not the source image")
 		CHECK(corrRaw > 0.75);
 		CHECK(corrRaw > corrSrc);
 	}
+	s.destroy();
+}
+
+TEST_CASE("transparent output is composited by OBS, not painted over the background")
+{
+	const uint32_t w = 640, h = 360;
+	Scene s;
+	s.create(w, h, R"({"backend":"cpu","quality":"performance","bg_mode":"transparent"})");
+	pump(120); // let the model load and produce a matte
+
+	// How much of the frame the filter actually marks transparent.
+	std::vector<uint8_t> rawRgba;
+	double transparentFraction = 0;
+	for (int attempt = 0; attempt < 25; ++attempt) {
+		pump(20);
+		REQUIRE(captureSource(s.color, w, h, rawRgba));
+		size_t clear = 0;
+		for (size_t i = 3; i < rawRgba.size(); i += 4)
+			clear += rawRgba[i] < 32 ? 1 : 0;
+		transparentFraction = double(clear) / double(rawRgba.size() / 4);
+		if (transparentFraction > 0.05)
+			break;
+	}
+	std::printf("compositing check: %.1f%% of the frame is transparent\n", transparentFraction * 100.0);
+	REQUIRE_MESSAGE(transparentFraction > 0.05,
+			"the filter produced no transparent region, so compositing cannot be tested");
+
+	// Composited over two different backgrounds the results must differ wherever
+	// the matte is transparent. If the filter overrode the caller's blend state
+	// the two captures would come out identical, because the background pixels'
+	// own colour would have been written straight over both - which is exactly
+	// what made "Remove (transparent)" look like it did nothing.
+	std::vector<uint8_t> overBlue, overRed;
+	REQUIRE(captureOverBackground(s.color, w, h, 0.f, 0.f, 1.f, overBlue));
+	REQUIRE(captureOverBackground(s.color, w, h, 1.f, 0.f, 0.f, overRed));
+	REQUIRE(overBlue.size() == overRed.size());
+	size_t differing = 0;
+	for (size_t i = 0; i + 3 < overBlue.size(); i += 4)
+		if (std::abs(int(overBlue[i]) - int(overRed[i])) > 8 ||
+		    std::abs(int(overBlue[i + 2]) - int(overRed[i + 2])) > 8)
+			++differing;
+	const double differingFraction = double(differing) / double(overBlue.size() / 4);
+	std::printf("compositing check: %.1f%% of pixels take the colour of what is behind the source\n",
+		    differingFraction * 100.0);
+	CHECK(differingFraction > transparentFraction * 0.5);
 	s.destroy();
 }
 

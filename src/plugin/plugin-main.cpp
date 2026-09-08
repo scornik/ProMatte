@@ -112,6 +112,22 @@ bool obs_module_load(void)
 	if (g_capabilities->load())
 		PM_LOG_INFO("capability store loaded: %zu measurements (%s)", g_capabilities->size(), capPath.c_str());
 
+	// A second copy of the plugin (for example one left in
+	// %ProgramData%\obs-studio\plugins after installing into the OBS folder)
+	// loads fine but its obs_register_source call is rejected, so OBS silently
+	// keeps whichever copy loaded first. That makes an update look like it did
+	// nothing. Detect it and say so loudly, naming both files.
+	if (obs_source_get_display_name("promatte_filter")) {
+		const char *self = obs_get_module_binary_path(obs_current_module());
+		PM_LOG_ERROR("ANOTHER COPY OF PROMATTE IS ALREADY LOADED. This copy (%s) will be IGNORED by OBS, "
+			     "which keeps the copy that loaded first. Uninstall or delete one of them - a plugin "
+			     "must exist either in the OBS folder (obs-plugins\\64bit) or in "
+			     "%%ProgramData%%\\obs-studio\\plugins\\promatte, never both.",
+			     self ? self : "unknown path");
+		PM_LOG_INFO("ProMatte %s loaded but inactive (duplicate install)", PROMATTE_VERSION);
+		return true;
+	}
+
 	// Probe backends once at load so the first filter starts quickly.
 	enumerateBackends();
 	registerFilter();

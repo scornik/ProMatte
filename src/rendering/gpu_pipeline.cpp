@@ -462,14 +462,18 @@ void GpuPipeline::render(const RenderParams &p, gs_texture_t *background, uint32
 	setFloat(fx, "hasForeground", matteHasFg_ ? 1.f : 0.f);
 	setInt(fx, "debugView", int(p.debugView));
 
+	// Draw with whatever blend state the caller set up, exactly like the stock
+	// OBS filters that produce alpha (chroma key, colour key). The caller knows
+	// its destination: the scene compositor blends straight alpha over the
+	// sources behind, a texrender for a screenshot or group writes raw RGBA.
+	// Forcing blending off here would write the *background* pixels' colour
+	// straight over whatever is behind the source, so "Remove (transparent)"
+	// would produce a correct alpha channel that never actually reveals
+	// anything - the frame would still look untouched on screen.
 	const bool srgb = gs_framebuffer_srgb_enabled();
 	gs_enable_framebuffer_srgb(false);
-	gs_blend_state_push();
-	gs_blend_function(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA);
-	gs_enable_blending(false);
 	while (gs_effect_loop(fx, "Draw"))
 		gs_draw_sprite(src, 0, w_, h_);
-	gs_blend_state_pop();
 	gs_enable_framebuffer_srgb(srgb);
 }
 
@@ -481,12 +485,9 @@ void GpuPipeline::renderPassthrough()
 	gs_effect_t *fx = obs_get_base_effect(OBS_EFFECT_DEFAULT);
 	const bool srgb = gs_framebuffer_srgb_enabled();
 	gs_enable_framebuffer_srgb(false);
-	gs_blend_state_push();
-	gs_enable_blending(false);
 	setTex(fx, "image", src);
 	while (gs_effect_loop(fx, "Draw"))
 		gs_draw_sprite(src, 0, w_, h_);
-	gs_blend_state_pop();
 	gs_enable_framebuffer_srgb(srgb);
 }
 
