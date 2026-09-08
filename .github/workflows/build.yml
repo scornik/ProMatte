@@ -8,6 +8,9 @@ on:
 
 env:
   ORT_VERSION: "1.24.4"
+  # 1.23.0 is the last ONNX Runtime with macOS x86_64 and universal2 builds;
+  # 1.24 is Apple Silicon only. Using it keeps one bundle working on Intel Macs.
+  ORT_MACOS_VERSION: "1.23.0"
   OBS_VERSION: "31.1.1"
 
 jobs:
@@ -113,17 +116,18 @@ jobs:
           path: models/converted
       - name: Install build dependencies
         run: brew install cmake ninja nlohmann-json
-      - name: Fetch ONNX Runtime
+      - name: Fetch ONNX Runtime (universal2)
         run: |
-          curl -fsSL -O https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-osx-arm64-${ORT_VERSION}.tgz
-          tar xzf onnxruntime-osx-arm64-${ORT_VERSION}.tgz
-          echo "ORT_ROOT=$PWD/onnxruntime-osx-arm64-${ORT_VERSION}" >> "$GITHUB_ENV"
+          curl -fsSL -O https://github.com/microsoft/onnxruntime/releases/download/v${ORT_MACOS_VERSION}/onnxruntime-osx-universal2-${ORT_MACOS_VERSION}.tgz
+          tar xzf onnxruntime-osx-universal2-${ORT_MACOS_VERSION}.tgz
+          echo "ORT_ROOT=$PWD/onnxruntime-osx-universal2-${ORT_MACOS_VERSION}" >> "$GITHUB_ENV"
+          lipo -archs onnxruntime-osx-universal2-${ORT_MACOS_VERSION}/lib/libonnxruntime.dylib
       - name: Cache libobs
         id: obscache
         uses: actions/cache@v4
         with:
           path: obs-sdk
-          key: libobs-${{ env.OBS_VERSION }}-macos15-arm64-v3
+          key: libobs-${{ env.OBS_VERSION }}-macos15-universal-v1
       - name: Build libobs
         if: steps.obscache.outputs.cache-hit != 'true'
         run: |
@@ -131,7 +135,7 @@ jobs:
           # no plugins, no frontend, which keeps this to a few minutes.
           curl -fsSL -o obs.tar.gz https://github.com/obsproject/obs-studio/archive/refs/tags/${OBS_VERSION}.tar.gz
           tar xzf obs.tar.gz
-          curl -fsSL -o deps.tar.xz https://github.com/obsproject/obs-deps/releases/download/2025-07-11/macos-deps-2025-07-11-arm64.tar.xz
+          curl -fsSL -o deps.tar.xz https://github.com/obsproject/obs-deps/releases/download/2025-07-11/macos-deps-2025-07-11-universal.tar.xz
           mkdir -p obs-deps && tar xf deps.tar.xz -C obs-deps
           # OBS' own cmake refuses any generator but Xcode on macOS
           # (cmake/macos/compilerconfig.cmake), so libobs is built with Xcode
@@ -139,7 +143,7 @@ jobs:
           cmake -S obs-studio-${OBS_VERSION} -B obs-build -G Xcode \
             -DCMAKE_PREFIX_PATH="$PWD/obs-deps" \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 \
-            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" \
             -DOBS_CMAKE_VERSION=3.0.0 \
             -DENABLE_PLUGINS=OFF -DENABLE_FRONTEND=OFF -DENABLE_UI=OFF \
             -DENABLE_SCRIPTING=OFF -DOBS_VERSION_OVERRIDE=${OBS_VERSION} \
@@ -161,6 +165,7 @@ jobs:
             -DPROMATTE_ORT_ROOT="$ORT_ROOT" \
             -Dlibobs_DIR="$PWD/obs-sdk/Frameworks/libobs.framework/Resources/cmake" \
             -DCMAKE_PREFIX_PATH="$PWD/obs-sdk;$PWD/obs-deps" \
+            -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
       - name: Build
         run: cmake --build build --parallel
@@ -172,6 +177,17 @@ jobs:
         run: |
           find build/promatte.plugin -maxdepth 3 | head -30
           otool -L build/promatte.plugin/Contents/MacOS/promatte | head
+          echo "--- architectures ---"
+          # Both slices must be present or the plugin will not load on Intel Macs.
+          for f in build/promatte.plugin/Contents/MacOS/promatte \
+                   build/promatte.plugin/Contents/Frameworks/libonnxruntime*.dylib; do
+            archs=$(lipo -archs "$f")
+            echo "$f: $archs"
+            case "$archs" in
+              *arm64*x86_64*|*x86_64*arm64*) ;;
+              *) echo "not universal"; exit 1 ;;
+            esac
+          done
           # The bundle carries the models and ONNX Runtime, so an archive that
           # comes out tiny means the install rules dropped its contents.
           size=$(stat -f%z build/ProMatte-*-macos-*.zip)
@@ -183,7 +199,7 @@ jobs:
           unzip -l build/ProMatte-*-macos-*.zip | head -15
       - uses: actions/upload-artifact@v4
         with:
-          name: promatte-macos-arm64
+          name: promatte-macos-universal
           path: |
             build/*.zip
             build/*.tar.gz
