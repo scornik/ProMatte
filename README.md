@@ -1,4 +1,25 @@
-# ProMatte — AI Background Removal for OBS Studio
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
+    <img src="assets/logo.svg" alt="" width="104" height="104">
+  </picture>
+</p>
+
+<h1 align="center">ProMatte</h1>
+
+<p align="center">
+  <b>AI background removal for OBS Studio.</b><br>
+  Real time, professional edges, and entirely on your own machine.
+</p>
+
+<p align="center">
+  <a href="https://github.com/scornik/ProMatte/actions/workflows/build.yml"><img alt="Build" src="https://github.com/scornik/ProMatte/actions/workflows/build.yml/badge.svg"></a>
+  <a href="https://github.com/scornik/ProMatte/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/scornik/ProMatte?label=release"></a>
+  <img alt="Platforms" src="https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-2b3a55">
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--2.0--or--later-blue"></a>
+</p>
+
+---
 
 ProMatte is a professional, fully local, real-time AI background removal and
 replacement filter for OBS Studio. Add it to your webcam and choose *Remove*,
@@ -192,6 +213,7 @@ at the resulting SDK and `-DPROMATTE_ORT_ROOT` at an
 
 ```
 CMakeLists.txt             build system (core library, plugin, tools, tests)
+assets/                    project logo (light and dark SVG)
 src/plugin/                module entry point
 src/obs/                   OBS filter, settings, presets, background sources
 src/rendering/             GPU pipeline (effects: downscale, refine, blur, composite), debug overlay

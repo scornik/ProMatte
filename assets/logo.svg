@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="ProMatte">
+  <title>ProMatte</title>
+  <defs>
+    <clipPath id="pm-badge">
+      <rect x="2" y="2" width="60" height="60" rx="14"/>
+    </clipPath>
+    <pattern id="pm-checker" width="14" height="14" patternUnits="userSpaceOnUse">
+      <rect width="14" height="14" fill="#FFFFFF"/>
+      <rect width="7" height="7" fill="#D7DEE9"/>
+      <rect x="7" y="7" width="7" height="7" fill="#D7DEE9"/>
+    </pattern>
+    <linearGradient id="pm-bg" x1="2" y1="2" x2="32" y2="62" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#pm-badge)">
+    <!-- Left: the original background, still there. Right: the same background
+         removed, shown as the compositor's alpha checkerboard. The subject
+         crosses the divide untouched - that is the whole product in one mark. -->
+    <rect x="2" y="2" width="30" height="60" fill="url(#pm-bg)"/>
+    <rect x="32" y="2" width="30" height="60" fill="url(#pm-checker)"/>
+    <g fill="#0F172A">
+      <circle cx="32" cy="22" r="12"/>
+      <path d="M6 62v-5c0-14 11-24 26-24s26 10 26 24v5z"/>
+    </g>
+  </g>
+  <rect x="2.5" y="2.5" width="59" height="59" rx="13.5" fill="none" stroke="#0F172A" stroke-opacity="0.16"/>
+</svg>
