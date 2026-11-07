@@ -11,7 +11,7 @@
   including the changed structure layout. Builds against OBS 30–32 retain the
   previous image-file API.
 - Reset the animated-background timing when releasing an image.
-- Updated the integration harness to compile with OBS 33's image-file API.
+- Updated the integration harness for OBS 33's image-file API and canvas scene cleanup before plugin unload.
 - Fixed CI model conversion selecting macOS `__MACOSX` metadata instead of
   Paddle inference files; added regression checks for archive selection.
 

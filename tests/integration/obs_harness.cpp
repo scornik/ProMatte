@@ -288,6 +288,10 @@ struct Scene {
 			filter = nullptr;
 		}
 		if (scene) {
+			// OBS 33's canvas retains public scenes until they are removed.
+#if LIBOBS_API_MAJOR_VER >= 33
+			obs_canvas_scene_remove(scene);
+#endif
 			obs_scene_release(scene);
 			scene = nullptr;
 		}
@@ -295,6 +299,10 @@ struct Scene {
 			obs_source_release(color);
 			color = nullptr;
 		}
+		// Let the current render frame release its source references, then
+		// finish deferred source/filter destruction before module unload.
+		obs_queue_task(OBS_TASK_GRAPHICS, [](void *) {}, nullptr, true);
+		obs_wait_for_destroy_queue();
 	}
 };
 
