@@ -100,11 +100,12 @@ def unzip(name):
 
 
 def paddle_model_dir(extracted):
-    """The archives contain a single inference-model directory."""
-    for base, _dirs, files in os.walk(extracted):
-        if any(f.endswith(".pdmodel") for f in files):
+    """Find the inference files, ignoring macOS archive metadata."""
+    for base, dirs, files in os.walk(extracted):
+        dirs[:] = [name for name in dirs if name != "__MACOSX"]
+        if {"model.pdmodel", "model.pdiparams"}.issubset(files):
             return base
-    raise SystemExit(f"no .pdmodel found under {extracted}")
+    raise SystemExit(f"no model.pdmodel/model.pdiparams pair found under {extracted}")
 
 
 def tflite_to_onnx(name, out_name):

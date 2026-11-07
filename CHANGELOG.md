@@ -12,6 +12,8 @@
   previous image-file API.
 - Reset the animated-background timing when releasing an image.
 - Updated the integration harness to compile with OBS 33's image-file API.
+- Fixed CI model conversion selecting macOS `__MACOSX` metadata instead of
+  Paddle inference files; added regression checks for archive selection.
 
 ### Release compatibility
 
