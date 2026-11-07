@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.0.3 — 2026-11-07
+
+### Fixed
+
+- Fixed ProMatte failing to load in OBS Studio 33. OBS 33 removed the legacy
+  image-file exports imported by 1.0.2, causing Windows loader error 127 before
+  the plugin could initialize.
+- Builds against OBS 33 now use `gs_image_file_ex_t` and its replacement API,
+  including the changed structure layout. Builds against OBS 30–32 retain the
+  previous image-file API.
+- Reset the animated-background timing when releasing an image.
+- Updated the integration harness to compile with OBS 33's image-file API.
+
+### Release compatibility
+
+The 1.0.3 Windows installer is built for **OBS Studio 33 (64-bit)**. It is a
+separate binary from the OBS 30–32 build; users of those versions should keep
+1.0.2. No new Linux or macOS binaries are included in this release. Their
+previous 1.0.2 packages remain available on the 1.0.2 release page.
+
+### Validation
+
+Validated on Windows against OBS Studio 33.0.1: DLL loading, 36 unit tests
+(269 assertions), and three integration tests covering module registration,
+filter creation/render/destruction, and background-mode changes. CPU and
+DirectML inference initialized successfully. A live webcam session and the
+OBS 30–32 build have not been retested for this release.
+
 ## 1.0.2 — 2026-09-08
 
 **The macOS plugin now links correctly.** 1.0.1 made OBS report *"the following

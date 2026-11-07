@@ -58,8 +58,15 @@ See [docs/troubleshooting.md](docs/troubleshooting.md) if something looks wrong.
 
 ### Windows
 
-Run `ProMatte-Setup-1.0.2.exe`. Windows 10/11 64-bit, OBS 30.0 or newer. The
-installer finds your OBS directory and removes any older copy for you.
+For **OBS Studio 33**, run `ProMatte-Setup-1.0.3-OBS33.exe` (Windows 10/11
+64-bit). The installer finds your OBS directory and removes any older copy
+for you. Close OBS before installing, then restart it.
+
+For **OBS 30–32**, use the Windows installer from
+[release 1.0.2](https://github.com/scornik/ProMatte/releases/tag/v1.0.2).
+The OBS 33 build uses a new image API and cannot load on earlier OBS versions.
+See [OBS 33 compatibility](docs/obs-33-compatibility.md) for build details.
+Linux and macOS packages below remain at 1.0.2.
 
 ### Linux
 

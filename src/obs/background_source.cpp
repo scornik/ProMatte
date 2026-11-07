@@ -6,6 +6,28 @@
 
 namespace promatte {
 
+namespace {
+// Keep the old build working with OBS 30-32; OBS 33 builds must use the
+// replacement API, including its new struct layout (not just symbol names).
+#if LIBOBS_API_MAJOR_VER >= 33
+using ImageFile = gs_image_file_ex_t;
+constexpr auto imageInit = gs_image_file_ex_init;
+constexpr auto imageFree = gs_image_file_ex_free;
+constexpr auto imageInitTexture = gs_image_file_ex_init_texture;
+constexpr auto imageTick = gs_image_file_ex_tick;
+constexpr auto imageUpdateTexture = gs_image_file_ex_update_texture;
+const auto &imageData(const ImageFile &image) { return image; }
+#else
+using ImageFile = gs_image_file4_t;
+constexpr auto imageInit = gs_image_file4_init;
+constexpr auto imageFree = gs_image_file4_free;
+constexpr auto imageInitTexture = gs_image_file4_init_texture;
+constexpr auto imageTick = gs_image_file4_tick;
+constexpr auto imageUpdateTexture = gs_image_file4_update_texture;
+const auto &imageData(const ImageFile &image) { return image.image3.image2.image; }
+#endif
+} // namespace
+
 BackgroundSource::~BackgroundSource()
 {
 	// release() must have been called on the graphics thread; guard anyway.
@@ -28,10 +50,10 @@ void BackgroundSource::tick(float)
 {
 	if (mode_ == BackgroundMode::Image && imageLoaded_) {
 		uint64_t now = os_gettime_ns();
-		if (lastTickNs_ && image_.image3.image2.image.is_animated_gif) {
-			if (gs_image_file4_tick(&image_, now - lastTickNs_)) {
+		if (lastTickNs_ && imageData(image_).is_animated_gif) {
+			if (imageTick(&image_, now - lastTickNs_)) {
 				obs_enter_graphics();
-				gs_image_file4_update_texture(&image_);
+				imageUpdateTexture(&image_);
 				obs_leave_graphics();
 			}
 		}
@@ -44,24 +66,25 @@ void BackgroundSource::loadImage()
 	releaseImage();
 	if (imagePath_.empty())
 		return;
-	gs_image_file4_init(&image_, imagePath_.c_str(), GS_IMAGE_ALPHA_PREMULTIPLY_SRGB);
-	gs_image_file4_init_texture(&image_);
-	imageLoaded_ = image_.image3.image2.image.loaded;
+	imageInit(&image_, imagePath_.c_str(), GS_IMAGE_ALPHA_PREMULTIPLY_SRGB);
+	imageInitTexture(&image_);
+	imageLoaded_ = imageData(image_).loaded;
 	loadedImagePath_ = imagePath_;
 	if (!imageLoaded_)
 		PM_LOG_WARN("could not load background image '%s'", imagePath_.c_str());
 	else
-		PM_LOG_INFO("background image loaded: %s (%ux%u)", imagePath_.c_str(), image_.image3.image2.image.cx,
-			    image_.image3.image2.image.cy);
+		PM_LOG_INFO("background image loaded: %s (%ux%u)", imagePath_.c_str(), imageData(image_).cx,
+			    imageData(image_).cy);
 }
 
 void BackgroundSource::releaseImage()
 {
 	if (imageLoaded_ || !loadedImagePath_.empty()) {
-		gs_image_file4_free(&image_);
-		image_ = gs_image_file4_t{};
+		imageFree(&image_);
+		image_ = ImageFile{};
 	}
 	imageLoaded_ = false;
+	lastTickNs_ = 0;
 	loadedImagePath_.clear();
 }
 
@@ -159,11 +182,11 @@ gs_texture_t *BackgroundSource::texture(uint32_t &w, uint32_t &h)
 			resolveSource();
 	}
 	if (mode_ == BackgroundMode::Image) {
-		if (!imageLoaded_ || !image_.image3.image2.image.texture)
+		if (!imageLoaded_ || !imageData(image_).texture)
 			return nullptr;
-		w = image_.image3.image2.image.cx;
-		h = image_.image3.image2.image.cy;
-		return image_.image3.image2.image.texture;
+		w = imageData(image_).cx;
+		h = imageData(image_).cy;
+		return imageData(image_).texture;
 	}
 	obs_source_t *src = nullptr;
 	if (mode_ == BackgroundMode::Video)

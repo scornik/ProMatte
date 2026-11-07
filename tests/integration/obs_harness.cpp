@@ -113,7 +113,11 @@ struct TestSource {
 	float t = 0.f;
 	// A real portrait makes the segmentation model produce a real matte, which the
 	// matte-integrity test needs; without it the source is drawn procedurally.
+	#if LIBOBS_API_MAJOR_VER >= 33
+	gs_image_file_ex_t image{};
+#else
 	gs_image_file_t image{};
+#endif
 	bool imageLoaded = false;
 };
 
@@ -129,8 +133,13 @@ void *testSourceCreate(obs_data_t *settings, obs_source_t *)
 	const std::string portrait = std::string(PROMATTE_SOURCE_DIR) + "/tests/visual/assets/portrait_obama.jpg";
 	if (fs::exists(portrait)) {
 		obs_enter_graphics();
+#if LIBOBS_API_MAJOR_VER >= 33
+		gs_image_file_ex_init(&s->image, portrait.c_str(), GS_IMAGE_ALPHA_STRAIGHT);
+		gs_image_file_ex_init_texture(&s->image);
+#else
 		gs_image_file_init(&s->image, portrait.c_str());
 		gs_image_file_init_texture(&s->image);
+#endif
 		obs_leave_graphics();
 		s->imageLoaded = s->image.loaded;
 	}
@@ -141,7 +150,11 @@ void testSourceDestroy(void *d)
 	auto *s = static_cast<TestSource *>(d);
 	if (s->imageLoaded) {
 		obs_enter_graphics();
+#if LIBOBS_API_MAJOR_VER >= 33
+		gs_image_file_ex_free(&s->image);
+#else
 		gs_image_file_free(&s->image);
+#endif
 		obs_leave_graphics();
 	}
 	delete s;

@@ -10,7 +10,7 @@
 namespace promatte {
 
 // Provides the replacement background texture for Image / Video / Source modes.
-//   Image  : gs_image_file4 (animated GIF supported)
+//   Image  : OBS image-file API (animated GIF supported)
 //   Video  : private ffmpeg_source (looping, muted) rendered into a texrender
 //   Source : any other OBS source (by name) rendered into a texrender
 // All methods run on the graphics thread except update(), which only records
@@ -42,7 +42,12 @@ private:
 	std::string sourceName_, resolvedSourceName_;
 	obs_source_t *owner_ = nullptr;
 
+	// OBS 33 removed the versioned image-file API and changed its layout.
+#if LIBOBS_API_MAJOR_VER >= 33
+	gs_image_file_ex_t image_{};
+#else
 	gs_image_file4_t image_{};
+#endif
 	bool imageLoaded_ = false;
 	uint64_t lastTickNs_ = 0;
 
