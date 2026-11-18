@@ -39,14 +39,16 @@ fi
 new="@loader_path/../Frameworks/$name"
 echo "onnxruntime: $old -> $new"
 
-install_name_tool -id "$new" "$fw/$name"
-install_name_tool -change "$old" "$new" "$binary"
+if [ "$old" != "$new" ]; then
+    install_name_tool -id "$new" "$fw/$name"
+    install_name_tool -change "$old" "$new" "$binary"
 
-# The check 1.0.1 and the first attempt at 1.0.2 were both missing.
-if otool -L "$binary" | grep -qF "$old"; then
-    echo "install_name_tool left $old in $binary" >&2
-    otool -L "$binary" >&2
-    exit 1
+    # The check 1.0.1 and the first attempt at 1.0.2 were both missing.
+    if otool -L "$binary" | grep -qF "$old"; then
+        echo "install_name_tool left $old in $binary" >&2
+        otool -L "$binary" >&2
+        exit 1
+    fi
 fi
 if ! otool -L "$binary" | grep -qF "$new"; then
     echo "$binary does not reference $new" >&2

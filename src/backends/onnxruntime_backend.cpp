@@ -148,12 +148,22 @@ bool OnnxRuntimeBackend::appendDirectMLProvider(Ort::SessionOptions &so, int ada
 
 Ort::Env &OnnxRuntimeBackend::env()
 {
+	const OrtApiBase *apiBase = OrtGetApiBase();
+	if (!apiBase || !apiBase->GetApi(ORT_API_VERSION)) {
+		throw std::runtime_error("Incompatible ONNX Runtime library version");
+	}
 	static Ort::Env instance(ORT_LOGGING_LEVEL_WARNING, "promatte", &ortLogCallback, nullptr);
 	return instance;
 }
 
 std::vector<std::string> OnnxRuntimeBackend::availableProviders()
 {
+	const OrtApiBase *apiBase = OrtGetApiBase();
+	if (!apiBase || !apiBase->GetApi(ORT_API_VERSION)) {
+		PM_LOG_ERROR("ONNX Runtime API version %u is not supported by runtime (%s)",
+			     ORT_API_VERSION, apiBase ? apiBase->GetVersionString() : "unknown");
+		return {};
+	}
 	try {
 		env();
 		return Ort::GetAvailableProviders();
